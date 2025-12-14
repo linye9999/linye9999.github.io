@@ -8,12 +8,12 @@
         <language>zh-cn</language>
         <copyright>linye</copyright>
         <lastBuildDate>Sat, 13 Dec 2025 21:46:07 +0800</lastBuildDate><atom:link href="https://linye9999.github.io/post/index.xml" rel="self" type="application/rss+xml" /><item>
-        <title>压缩包明文爆破</title>
-        <link>https://linye9999.github.io/p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/</link>
+        <title>misc-压缩包明文爆破</title>
+        <link>https://linye9999.github.io/p/misc-%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/</link>
         <pubDate>Sat, 13 Dec 2025 21:46:07 +0800</pubDate>
         
-        <guid>https://linye9999.github.io/p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/</guid>
-        <description>&lt;img src="https://linye9999.github.io/p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/cover.jpg" alt="Featured image of post 压缩包明文爆破" /&gt;&lt;h1 id=&#34;压缩包明文爆破&#34;&gt;压缩包明文爆破
+        <guid>https://linye9999.github.io/p/misc-%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/</guid>
+        <description>&lt;img src="https://linye9999.github.io/p/misc-%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/cover.jpg" alt="Featured image of post misc-压缩包明文爆破" /&gt;&lt;h1 id=&#34;压缩包明文爆破&#34;&gt;压缩包明文爆破
 &lt;/h1&gt;&lt;h2 id=&#34;前置知识&#34;&gt;前置知识
 &lt;/h2&gt;&lt;h3 id=&#34;明文攻击核心条件&#34;&gt;明文攻击核心条件
 &lt;/h3&gt;&lt;ul&gt;
@@ -27,10 +27,10 @@
 &lt;p&gt;下载完之后解压缩，将.exe文件的目录添加到环境变量中即可&lt;/p&gt;
 &lt;h3 id=&#34;例题&#34;&gt;例题
 &lt;/h3&gt;&lt;p&gt;给了一个.txt和.zip文件&lt;/p&gt;
-&lt;p&gt;&lt;img src=&#34;https://linye9999.github.io/p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/zip.png&#34;
+&lt;p&gt;&lt;img src=&#34;https://linye9999.github.io/p/misc-%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/zip.png&#34;
 	width=&#34;485&#34;
 	height=&#34;66&#34;
-	srcset=&#34;https://linye9999.github.io/p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/zip_hu_44d798b12b54cf6d.png 480w, https://linye9999.github.io/p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/zip_hu_3f24921b016fab69.png 1024w&#34;
+	srcset=&#34;https://linye9999.github.io/p/misc-%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/zip_hu_44d798b12b54cf6d.png 480w, https://linye9999.github.io/p/misc-%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/zip_hu_3f24921b016fab69.png 1024w&#34;
 	loading=&#34;lazy&#34;
 	
 		alt=&#34;zip&#34;
@@ -41,10 +41,10 @@
 		data-flex-basis=&#34;1763px&#34;
 	
 &gt;&lt;/p&gt;
-&lt;p&gt;flag.txt内容是&lt;img src=&#34;https://linye9999.github.io/p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/txt.png&#34;
+&lt;p&gt;flag.txt内容是&lt;img src=&#34;https://linye9999.github.io/p/misc-%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/txt.png&#34;
 	width=&#34;550&#34;
 	height=&#34;190&#34;
-	srcset=&#34;https://linye9999.github.io/p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/txt_hu_3e576edfa8815f26.png 480w, https://linye9999.github.io/p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/txt_hu_cbf803f55ee26e14.png 1024w&#34;
+	srcset=&#34;https://linye9999.github.io/p/misc-%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/txt_hu_3e576edfa8815f26.png 480w, https://linye9999.github.io/p/misc-%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/txt_hu_cbf803f55ee26e14.png 1024w&#34;
 	loading=&#34;lazy&#34;
 	
 		alt=&#34;txt&#34;
@@ -110,10 +110,10 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;bkcrack -C flag.zip -c flag.txt -x &lt;span class=&#34;m&#34;&gt;0&lt;/span&gt; &lt;span class=&#34;s2&#34;&gt;&amp;#34;666C61677B593075&amp;#34;&lt;/span&gt; -x &lt;span class=&#34;m&#34;&gt;25&lt;/span&gt; &lt;span class=&#34;s2&#34;&gt;&amp;#34;2121217D&amp;#34;&lt;/span&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
 &lt;/div&gt;
-&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;https://linye9999.github.io/p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/a8bed6c1-2e65-47cb-8cb4-2a124efc7cbe.png&#34;
+&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;https://linye9999.github.io/p/misc-%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/a8bed6c1-2e65-47cb-8cb4-2a124efc7cbe.png&#34;
 	width=&#34;1484&#34;
 	height=&#34;405&#34;
-	srcset=&#34;https://linye9999.github.io/p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/a8bed6c1-2e65-47cb-8cb4-2a124efc7cbe_hu_445533e047fc7089.png 480w, https://linye9999.github.io/p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/a8bed6c1-2e65-47cb-8cb4-2a124efc7cbe_hu_11e65982dc840e7c.png 1024w&#34;
+	srcset=&#34;https://linye9999.github.io/p/misc-%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/a8bed6c1-2e65-47cb-8cb4-2a124efc7cbe_hu_445533e047fc7089.png 480w, https://linye9999.github.io/p/misc-%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/a8bed6c1-2e65-47cb-8cb4-2a124efc7cbe_hu_11e65982dc840e7c.png 1024w&#34;
 	loading=&#34;lazy&#34;
 	
 		alt=&#34;a8bed6c1-2e65-47cb-8cb4-2a124efc7cbe&#34;
@@ -129,10 +129,10 @@
 &lt;/li&gt;
 &lt;li&gt;
 &lt;p&gt;爆破成功打开解压缩后的文件&lt;/p&gt;
-&lt;p&gt;&lt;img src=&#34;https://linye9999.github.io/p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/2.png&#34;
+&lt;p&gt;&lt;img src=&#34;https://linye9999.github.io/p/misc-%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/2.png&#34;
 	width=&#34;695&#34;
 	height=&#34;220&#34;
-	srcset=&#34;https://linye9999.github.io/p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/2_hu_863d4fb5ff59066a.png 480w, https://linye9999.github.io/p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/2_hu_a51fabc9826cc8d1.png 1024w&#34;
+	srcset=&#34;https://linye9999.github.io/p/misc-%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/2_hu_863d4fb5ff59066a.png 480w, https://linye9999.github.io/p/misc-%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/2_hu_a51fabc9826cc8d1.png 1024w&#34;
 	loading=&#34;lazy&#34;
 	
 		alt=&#34;2&#34;

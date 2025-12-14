@@ -2,18 +2,18 @@
 <html lang="zh-cn" dir="ltr">
     <head><meta charset='utf-8'>
 <meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content="压缩包明文爆破 前置知识 明文攻击核心条件 加密方式：仅支持ZipCrypto加密（AES 加密不支持） 压缩模式：Store（仅存储）模式成功率 100%，Deflate（压缩）模式需匹配压缩算法 已知明文：至少 12 字节（其中 8 字节连续），可通过已知片段 + 特征字符凑整 工具准备 使用工具bkcrack\n下载链接https://github.com/kimci86/bkcrack/releases\n下载完之后解压缩，将.exe文件的目录添加到环境变量中即可\n例题 给了一个.txt和.zip文件\nflag.txt内容是\n先查看压缩包基础信息 1 2 3 4 5 6 7 bkcrack -L flag.zip bkcrack 1.8.1 - 2025-10-25 Archive: flag.zip Index Encryption Compression CRC32 Uncompressed Packed size Name ----- ---------- ----------- -------- ------------ ------------ ---------------- 0 ZipCrypto Store 1c277376 29 41 flag.txt 分析： 加密方式：ZipCrypto（支持明文攻击） 压缩模式：Store（仅存储，无压缩，攻击成功率 100%） 文件信息：flag.txt原始大小 29 字节，CRC32 校验值1c277376 结论：完全满足明文攻击条件，是最优破解场景\n">
-<title>压缩包明文爆破</title>
+<title>misc-压缩包明文爆破</title>
 
-<link rel='canonical' href='https://linye9999.github.io/p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/'>
+<link rel='canonical' href='https://linye9999.github.io/p/misc-%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/'>
 
-<link rel="stylesheet" href="/scss/style.min.b0e76e98cdd4f7082d1fc36f7af7e0843a81201db2197c03ca426751dc923735.css"><meta property='og:title' content="压缩包明文爆破">
+<link rel="stylesheet" href="/scss/style.min.b0e76e98cdd4f7082d1fc36f7af7e0843a81201db2197c03ca426751dc923735.css"><meta property='og:title' content="misc-压缩包明文爆破">
 <meta property='og:description' content="压缩包明文爆破 前置知识 明文攻击核心条件 加密方式：仅支持ZipCrypto加密（AES 加密不支持） 压缩模式：Store（仅存储）模式成功率 100%，Deflate（压缩）模式需匹配压缩算法 已知明文：至少 12 字节（其中 8 字节连续），可通过已知片段 + 特征字符凑整 工具准备 使用工具bkcrack\n下载链接https://github.com/kimci86/bkcrack/releases\n下载完之后解压缩，将.exe文件的目录添加到环境变量中即可\n例题 给了一个.txt和.zip文件\nflag.txt内容是\n先查看压缩包基础信息 1 2 3 4 5 6 7 bkcrack -L flag.zip bkcrack 1.8.1 - 2025-10-25 Archive: flag.zip Index Encryption Compression CRC32 Uncompressed Packed size Name ----- ---------- ----------- -------- ------------ ------------ ---------------- 0 ZipCrypto Store 1c277376 29 41 flag.txt 分析： 加密方式：ZipCrypto（支持明文攻击） 压缩模式：Store（仅存储，无压缩，攻击成功率 100%） 文件信息：flag.txt原始大小 29 字节，CRC32 校验值1c277376 结论：完全满足明文攻击条件，是最优破解场景\n">
-<meta property='og:url' content='https://linye9999.github.io/p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/'>
+<meta property='og:url' content='https://linye9999.github.io/p/misc-%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/'>
 <meta property='og:site_name' content='linye'>
-<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:published_time' content='2025-12-13T21:46:07&#43;08:00'/><meta property='article:modified_time' content='2025-12-13T21:46:07&#43;08:00'/><meta property='og:image' content='https://linye9999.github.io/p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/cover.jpg' />
-<meta name="twitter:title" content="压缩包明文爆破">
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:published_time' content='2025-12-13T21:46:07&#43;08:00'/><meta property='article:modified_time' content='2025-12-13T21:46:07&#43;08:00'/><meta property='og:image' content='https://linye9999.github.io/p/misc-%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/cover.jpg' />
+<meta name="twitter:title" content="misc-压缩包明文爆破">
 <meta name="twitter:description" content="压缩包明文爆破 前置知识 明文攻击核心条件 加密方式：仅支持ZipCrypto加密（AES 加密不支持） 压缩模式：Store（仅存储）模式成功率 100%，Deflate（压缩）模式需匹配压缩算法 已知明文：至少 12 字节（其中 8 字节连续），可通过已知片段 + 特征字符凑整 工具准备 使用工具bkcrack\n下载链接https://github.com/kimci86/bkcrack/releases\n下载完之后解压缩，将.exe文件的目录添加到环境变量中即可\n例题 给了一个.txt和.zip文件\nflag.txt内容是\n先查看压缩包基础信息 1 2 3 4 5 6 7 bkcrack -L flag.zip bkcrack 1.8.1 - 2025-10-25 Archive: flag.zip Index Encryption Compression CRC32 Uncompressed Packed size Name ----- ---------- ----------- -------- ------------ ------------ ---------------- 0 ZipCrypto Store 1c277376 29 41 flag.txt 分析： 加密方式：ZipCrypto（支持明文攻击） 压缩模式：Store（仅存储，无压缩，攻击成功率 100%） 文件信息：flag.txt原始大小 29 字节，CRC32 校验值1c277376 结论：完全满足明文攻击条件，是最优破解场景\n"><meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:image" content='https://linye9999.github.io/p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/cover.jpg' />
+    <meta name="twitter:image" content='https://linye9999.github.io/p/misc-%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/cover.jpg' />
     <link rel="shortcut icon" href="/favicon.ico" />
 
     </head>
@@ -331,13 +331,13 @@
     <article class="has-image main-article">
     <header class="article-header">
         <div class="article-image">
-            <a href="/p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/">
-                <img src="/p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/cover_hu_1d2c5f3f6e9d36c5.jpg"
-                        srcset="/p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/cover_hu_1d2c5f3f6e9d36c5.jpg 800w, /p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/cover_hu_1af76f49f35b8ecd.jpg 1600w"
+            <a href="/p/misc-%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/">
+                <img src="/p/misc-%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/cover_hu_1d2c5f3f6e9d36c5.jpg"
+                        srcset="/p/misc-%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/cover_hu_1d2c5f3f6e9d36c5.jpg 800w, /p/misc-%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/cover_hu_1af76f49f35b8ecd.jpg 1600w"
                         width="800" 
                         height="492" 
                         loading="lazy"
-                        alt="Featured image of post 压缩包明文爆破" />
+                        alt="Featured image of post misc-压缩包明文爆破" />
                 
             </a>
         </div>
@@ -348,7 +348,7 @@
 
     <div class="article-title-wrapper">
         <h2 class="article-title">
-            <a href="/p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/">压缩包明文爆破</a>
+            <a href="/p/misc-%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/">misc-压缩包明文爆破</a>
         </h2>
     
         
@@ -400,10 +400,10 @@
 <p>下载完之后解压缩，将.exe文件的目录添加到环境变量中即可</p>
 <h3 id="例题">例题
 </h3><p>给了一个.txt和.zip文件</p>
-<p><img src="/p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/zip.png"
+<p><img src="/p/misc-%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/zip.png"
 	width="485"
 	height="66"
-	srcset="/p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/zip_hu_44d798b12b54cf6d.png 480w, /p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/zip_hu_3f24921b016fab69.png 1024w"
+	srcset="/p/misc-%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/zip_hu_44d798b12b54cf6d.png 480w, /p/misc-%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/zip_hu_3f24921b016fab69.png 1024w"
 	loading="lazy"
 	
 		alt="zip"
@@ -414,10 +414,10 @@
 		data-flex-basis="1763px"
 	
 ></p>
-<p>flag.txt内容是<img src="/p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/txt.png"
+<p>flag.txt内容是<img src="/p/misc-%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/txt.png"
 	width="550"
 	height="190"
-	srcset="/p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/txt_hu_3e576edfa8815f26.png 480w, /p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/txt_hu_cbf803f55ee26e14.png 1024w"
+	srcset="/p/misc-%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/txt_hu_3e576edfa8815f26.png 480w, /p/misc-%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/txt_hu_cbf803f55ee26e14.png 1024w"
 	loading="lazy"
 	
 		alt="txt"
@@ -483,10 +483,10 @@
 </span></span><span class="line"><span class="cl">bkcrack -C flag.zip -c flag.txt -x <span class="m">0</span> <span class="s2">&#34;666C61677B593075&#34;</span> -x <span class="m">25</span> <span class="s2">&#34;2121217D&#34;</span>
 </span></span></code></pre></td></tr></table>
 </div>
-</div><p><img src="/p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/a8bed6c1-2e65-47cb-8cb4-2a124efc7cbe.png"
+</div><p><img src="/p/misc-%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/a8bed6c1-2e65-47cb-8cb4-2a124efc7cbe.png"
 	width="1484"
 	height="405"
-	srcset="/p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/a8bed6c1-2e65-47cb-8cb4-2a124efc7cbe_hu_445533e047fc7089.png 480w, /p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/a8bed6c1-2e65-47cb-8cb4-2a124efc7cbe_hu_11e65982dc840e7c.png 1024w"
+	srcset="/p/misc-%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/a8bed6c1-2e65-47cb-8cb4-2a124efc7cbe_hu_445533e047fc7089.png 480w, /p/misc-%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/a8bed6c1-2e65-47cb-8cb4-2a124efc7cbe_hu_11e65982dc840e7c.png 1024w"
 	loading="lazy"
 	
 		alt="a8bed6c1-2e65-47cb-8cb4-2a124efc7cbe"
@@ -502,10 +502,10 @@
 </li>
 <li>
 <p>爆破成功打开解压缩后的文件</p>
-<p><img src="/p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/2.png"
+<p><img src="/p/misc-%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/2.png"
 	width="695"
 	height="220"
-	srcset="/p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/2_hu_863d4fb5ff59066a.png 480w, /p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/2_hu_a51fabc9826cc8d1.png 1024w"
+	srcset="/p/misc-%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/2_hu_863d4fb5ff59066a.png 480w, /p/misc-%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/2_hu_a51fabc9826cc8d1.png 1024w"
 	loading="lazy"
 	
 		alt="2"
