@@ -4,11 +4,11 @@
 <meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content="压缩包明文爆破 前置知识 明文攻击核心条件 加密方式：仅支持ZipCrypto加密（AES 加密不支持） 压缩模式：Store（仅存储）模式成功率 100%，Deflate（压缩）模式需匹配压缩算法 已知明文：至少 12 字节（其中 8 字节连续），可通过已知片段 + 特征字符凑整 工具准备 使用工具bkcrack\n下载链接https://github.com/kimci86/bkcrack/releases\n下载完之后解压缩，将.exe文件的目录添加到环境变量中即可\n例题 给了一个.txt和.zip文件\nflag.txt内容是\n先查看压缩包基础信息 1 2 3 4 5 6 7 bkcrack -L flag.zip bkcrack 1.8.1 - 2025-10-25 Archive: flag.zip Index Encryption Compression CRC32 Uncompressed Packed size Name ----- ---------- ----------- -------- ------------ ------------ ---------------- 0 ZipCrypto Store 1c277376 29 41 flag.txt 分析： 加密方式：ZipCrypto（支持明文攻击） 压缩模式：Store（仅存储，无压缩，攻击成功率 100%） 文件信息：flag.txt原始大小 29 字节，CRC32 校验值1c277376 结论：完全满足明文攻击条件，是最优破解场景\n">
 <title>压缩包明文爆破</title>
 
-<link rel='canonical' href='https://linye9999/linye9999.github.io/p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/'>
+<link rel='canonical' href='https://linye9999.github.io/p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/'>
 
-<link rel="stylesheet" href="/linye9999.github.io/scss/style.min.b0e76e98cdd4f7082d1fc36f7af7e0843a81201db2197c03ca426751dc923735.css"><meta property='og:title' content="压缩包明文爆破">
+<link rel="stylesheet" href="/scss/style.min.b0e76e98cdd4f7082d1fc36f7af7e0843a81201db2197c03ca426751dc923735.css"><meta property='og:title' content="压缩包明文爆破">
 <meta property='og:description' content="压缩包明文爆破 前置知识 明文攻击核心条件 加密方式：仅支持ZipCrypto加密（AES 加密不支持） 压缩模式：Store（仅存储）模式成功率 100%，Deflate（压缩）模式需匹配压缩算法 已知明文：至少 12 字节（其中 8 字节连续），可通过已知片段 + 特征字符凑整 工具准备 使用工具bkcrack\n下载链接https://github.com/kimci86/bkcrack/releases\n下载完之后解压缩，将.exe文件的目录添加到环境变量中即可\n例题 给了一个.txt和.zip文件\nflag.txt内容是\n先查看压缩包基础信息 1 2 3 4 5 6 7 bkcrack -L flag.zip bkcrack 1.8.1 - 2025-10-25 Archive: flag.zip Index Encryption Compression CRC32 Uncompressed Packed size Name ----- ---------- ----------- -------- ------------ ------------ ---------------- 0 ZipCrypto Store 1c277376 29 41 flag.txt 分析： 加密方式：ZipCrypto（支持明文攻击） 压缩模式：Store（仅存储，无压缩，攻击成功率 100%） 文件信息：flag.txt原始大小 29 字节，CRC32 校验值1c277376 结论：完全满足明文攻击条件，是最优破解场景\n">
-<meta property='og:url' content='https://linye9999/linye9999.github.io/p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/'>
+<meta property='og:url' content='https://linye9999.github.io/p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/'>
 <meta property='og:site_name' content='linye'>
 <meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:published_time' content='2025-12-13T21:46:07&#43;08:00'/><meta property='article:modified_time' content='2025-12-13T21:46:07&#43;08:00'/>
 <meta name="twitter:title" content="压缩包明文爆破">
@@ -50,13 +50,13 @@
         
             
             <figure class="site-avatar">
-                <a href="/linye9999.github.io/">
+                <a href="/">
                 
                     
                     
                     
                         
-                        <img src="/linye9999.github.io/img/avatar_hu_381de9de90108543.png" width="300"
+                        <img src="/img/avatar_hu_381de9de90108543.png" width="300"
                             height="300" class="site-logo" loading="lazy" alt="Avatar">
                     
                 
@@ -69,7 +69,7 @@
         
         
         <div class="site-meta">
-            <h1 class="site-name"><a href="/linye9999.github.io">linye</a></h1>
+            <h1 class="site-name"><a href="/">linye</a></h1>
             <h2 class="site-description">演示说明</h2>
         </div>
     </header><ol class="menu-social">
@@ -119,7 +119,7 @@
         
         
         <li >
-            <a href='/linye9999.github.io/' >
+            <a href='/' >
                 
                 
                 
@@ -139,7 +139,7 @@
         
         
         <li >
-            <a href='/linye9999.github.io/%E5%85%B3%E4%BA%8E/' >
+            <a href='/%E5%85%B3%E4%BA%8E/' >
                 
                 
                 
@@ -158,7 +158,7 @@
         
         
         <li >
-            <a href='/linye9999.github.io/archives/' >
+            <a href='/archives/' >
                 
                 
                 
@@ -178,7 +178,7 @@
         
         
         <li >
-            <a href='/linye9999.github.io/search/' >
+            <a href='/search/' >
                 
                 
                 
@@ -197,7 +197,7 @@
         
         
         <li >
-            <a href='/linye9999.github.io/%E5%8F%8B%E6%83%85%E9%93%BE%E6%8E%A5/' >
+            <a href='/%E5%8F%8B%E6%83%85%E9%93%BE%E6%8E%A5/' >
                 
                 
                 
@@ -231,11 +231,11 @@
 
                             <select name="language" title="language" onchange="window.location.href = this.selectedOptions[0].value">
                                 
-                                    <option value="https://linye9999/linye9999.github.io/en/" >English</option>
+                                    <option value="https://linye9999.github.io/en/" >English</option>
                                 
-                                    <option value="https://linye9999/linye9999.github.io/" selected>简体中文</option>
+                                    <option value="https://linye9999.github.io/" selected>简体中文</option>
                                 
-                                    <option value="https://linye9999/linye9999.github.io/ar/" >عربي</option>
+                                    <option value="https://linye9999.github.io/ar/" >عربي</option>
                                 
                             </select>
                         </li>
@@ -333,7 +333,7 @@
 
     <div class="article-title-wrapper">
         <h2 class="article-title">
-            <a href="/linye9999.github.io/p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/">压缩包明文爆破</a>
+            <a href="/p/%E5%8E%8B%E7%BC%A9%E5%8C%85%E6%98%8E%E6%96%87%E7%88%86%E7%A0%B4/">压缩包明文爆破</a>
         </h2>
     
         
@@ -808,7 +808,7 @@
                 src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
                 
                 >
-            </script><script type="text/javascript" src="/linye9999.github.io/ts/main.c922af694cc257bf1ecc41c0dd7b0430f9114ec280ccf67cd2c6ad55f5316c4e.js" defer></script>
+            </script><script type="text/javascript" src="/ts/main.c922af694cc257bf1ecc41c0dd7b0430f9114ec280ccf67cd2c6ad55f5316c4e.js" defer></script>
 <script>
     (function () {
         const customFont = document.createElement('link');
