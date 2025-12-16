@@ -1,0 +1,1854 @@
+<!DOCTYPE html>
+<html lang="zh-cn" dir="ltr">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content="TEA，XTEA，XXTEA，c语言代码，汇编代码区别 前言：本文只对这三个加密进行表层的了解，不进行原理上的剖析\nTEA\n1 2 3 4 5 6 7 8 9 10 11 void tea_encrypt(uint32_t v[2], uint32_t k[4]) { uint32_t v0 = v[0], v1 = v[1], sum = 0; uint32_t delta = 0x9e3779b9; for (int i = 0; i &lt; 32; i++) { sum += delta; v0 += ((v1 &lt;&lt; 4) + k[0]) ^ (v1 + sum) ^ ((v1 &gt;&gt; 5) + k[1]); v1 += ((v0 &lt;&lt; 4) + k[2]) ^ (v0 + sum) ^ ((v0 &gt;&gt; 5) + k[3]); } v[0] = v0; v[1] = v1; } XTEA\n1 2 3 4 5 6 7 8 9 10 11 void xtea_encrypt(uint32_t v[2], uint32_t k[4]) { uint32_t v0 = v[0], v1 = v[1], sum = 0; uint32_t delta = 0x9e3779b9; for (int i = 0; i &lt; 32; i++) { v0 += (((v1 &lt;&lt; 4) ^ (v1 &gt;&gt; 5)) + v1) ^ (sum + k[sum &amp; 3]); sum += delta; v1 += (((v0 &lt;&lt; 4) ^ (v0 &gt;&gt; 5)) + v0) ^ (sum + k[(sum &gt;&gt; 11) &amp; 3]); } v[0] = v0; v[1] = v1; } XXTEA\n">
+<title>Geek-week2-reReverse的wp及对TEA家族的学习</title>
+
+<link rel='canonical' href='https://linye9999.github.io/p/geek-week2-rereverse%E7%9A%84wp%E5%8F%8A%E5%AF%B9tea%E5%AE%B6%E6%97%8F%E7%9A%84%E5%AD%A6%E4%B9%A0/'>
+
+<link rel="stylesheet" href="/scss/style.min.b0e76e98cdd4f7082d1fc36f7af7e0843a81201db2197c03ca426751dc923735.css"><meta property='og:title' content="Geek-week2-reReverse的wp及对TEA家族的学习">
+<meta property='og:description' content="TEA，XTEA，XXTEA，c语言代码，汇编代码区别 前言：本文只对这三个加密进行表层的了解，不进行原理上的剖析\nTEA\n1 2 3 4 5 6 7 8 9 10 11 void tea_encrypt(uint32_t v[2], uint32_t k[4]) { uint32_t v0 = v[0], v1 = v[1], sum = 0; uint32_t delta = 0x9e3779b9; for (int i = 0; i &lt; 32; i++) { sum += delta; v0 += ((v1 &lt;&lt; 4) + k[0]) ^ (v1 + sum) ^ ((v1 &gt;&gt; 5) + k[1]); v1 += ((v0 &lt;&lt; 4) + k[2]) ^ (v0 + sum) ^ ((v0 &gt;&gt; 5) + k[3]); } v[0] = v0; v[1] = v1; } XTEA\n1 2 3 4 5 6 7 8 9 10 11 void xtea_encrypt(uint32_t v[2], uint32_t k[4]) { uint32_t v0 = v[0], v1 = v[1], sum = 0; uint32_t delta = 0x9e3779b9; for (int i = 0; i &lt; 32; i++) { v0 += (((v1 &lt;&lt; 4) ^ (v1 &gt;&gt; 5)) + v1) ^ (sum + k[sum &amp; 3]); sum += delta; v1 += (((v0 &lt;&lt; 4) ^ (v0 &gt;&gt; 5)) + v0) ^ (sum + k[(sum &gt;&gt; 11) &amp; 3]); } v[0] = v0; v[1] = v1; } XXTEA\n">
+<meta property='og:url' content='https://linye9999.github.io/p/geek-week2-rereverse%E7%9A%84wp%E5%8F%8A%E5%AF%B9tea%E5%AE%B6%E6%97%8F%E7%9A%84%E5%AD%A6%E4%B9%A0/'>
+<meta property='og:site_name' content='linye'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:published_time' content='2025-12-15T20:12:09&#43;08:00'/><meta property='article:modified_time' content='2025-12-15T20:12:09&#43;08:00'/><meta property='og:image' content='https://linye9999.github.io/p/geek-week2-rereverse%E7%9A%84wp%E5%8F%8A%E5%AF%B9tea%E5%AE%B6%E6%97%8F%E7%9A%84%E5%AD%A6%E4%B9%A0/cover.jpg' />
+<meta name="twitter:title" content="Geek-week2-reReverse的wp及对TEA家族的学习">
+<meta name="twitter:description" content="TEA，XTEA，XXTEA，c语言代码，汇编代码区别 前言：本文只对这三个加密进行表层的了解，不进行原理上的剖析\nTEA\n1 2 3 4 5 6 7 8 9 10 11 void tea_encrypt(uint32_t v[2], uint32_t k[4]) { uint32_t v0 = v[0], v1 = v[1], sum = 0; uint32_t delta = 0x9e3779b9; for (int i = 0; i &lt; 32; i++) { sum += delta; v0 += ((v1 &lt;&lt; 4) + k[0]) ^ (v1 + sum) ^ ((v1 &gt;&gt; 5) + k[1]); v1 += ((v0 &lt;&lt; 4) + k[2]) ^ (v0 + sum) ^ ((v0 &gt;&gt; 5) + k[3]); } v[0] = v0; v[1] = v1; } XTEA\n1 2 3 4 5 6 7 8 9 10 11 void xtea_encrypt(uint32_t v[2], uint32_t k[4]) { uint32_t v0 = v[0], v1 = v[1], sum = 0; uint32_t delta = 0x9e3779b9; for (int i = 0; i &lt; 32; i++) { v0 += (((v1 &lt;&lt; 4) ^ (v1 &gt;&gt; 5)) + v1) ^ (sum + k[sum &amp; 3]); sum += delta; v1 += (((v0 &lt;&lt; 4) ^ (v0 &gt;&gt; 5)) + v0) ^ (sum + k[(sum &gt;&gt; 11) &amp; 3]); } v[0] = v0; v[1] = v1; } XXTEA\n"><meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content='https://linye9999.github.io/p/geek-week2-rereverse%E7%9A%84wp%E5%8F%8A%E5%AF%B9tea%E5%AE%B6%E6%97%8F%E7%9A%84%E5%AD%A6%E4%B9%A0/cover.jpg' />
+    <link rel="shortcut icon" href="/favicon.ico" />
+
+    </head>
+    <body class="
+    article-page
+    ">
+    <script>
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
+
+            document.documentElement.dataset.scheme = 'dark';
+        } else {
+            document.documentElement.dataset.scheme = 'light';
+        }
+    })();
+</script>
+<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="切换菜单">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
+
+    <header>
+        
+            
+            <figure class="site-avatar">
+                <a href="/">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/avatar_hu_381de9de90108543.png" width="300"
+                            height="300" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+                </a>
+                
+                    <span class="emoji">🍥</span>
+                
+            </figure>
+            
+        
+        
+        <div class="site-meta">
+            <h1 class="site-name"><a href="/">linye</a></h1>
+            <h2 class="site-description">欢迎来到我的博客这里啥都没有，还有linye是绫夜</h2>
+        </div>
+    </header><ol class="menu-social">
+            
+                <li>
+                    <a 
+                        href='https://github.com/CaiJimmy/hugo-theme-stack'
+                        target="_blank"
+                        title="GitHub"
+                        rel="me"
+                    >
+                        
+                        
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-github" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+  <path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5" />
+</svg>
+
+
+
+                        
+                    </a>
+                </li>
+            
+                <li>
+                    <a 
+                        href='https://twitter.com'
+                        target="_blank"
+                        title="Twitter"
+                        rel="me"
+                    >
+                        
+                        
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-twitter" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+  <path d="M22 4.01c-1 .49 -1.98 .689 -3 .99c-1.121 -1.265 -2.783 -1.335 -4.38 -.737s-2.643 2.06 -2.62 3.737v1c-3.245 .083 -6.135 -1.395 -8 -4c0 0 -4.182 7.433 4 11c-1.872 1.247 -3.739 2.088 -6 2c3.308 1.803 6.913 2.423 10.034 1.517c3.58 -1.04 6.522 -3.723 7.651 -7.742a13.84 13.84 0 0 0 .497 -3.753c-.002 -.249 1.51 -2.772 1.818 -4.013z" />
+</svg>
+
+
+
+                        
+                    </a>
+                </li>
+            
+        </ol><ol class="menu" id="main-menu">
+        
+        
+        
+        <li >
+            <a href='/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-home" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <polyline points="5 12 3 12 12 3 21 12 19 12" />
+  <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
+  <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
+</svg>
+
+
+
+                
+                <span>主页</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/%E5%85%B3%E4%BA%8E/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="7" r="4" />
+  <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+</svg>
+
+
+
+                
+                <span>关于</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/archives/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-archive" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <rect x="3" y="4" width="18" height="4" rx="2" />
+  <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" />
+  <line x1="10" y1="12" x2="14" y2="12" />
+</svg>
+
+
+
+                
+                <span>归档</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/search/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-search" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="10" cy="10" r="7" />
+  <line x1="21" y1="21" x2="15" y2="15" />
+</svg>
+
+
+
+                
+                <span>搜索</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/%E5%8F%8B%E6%83%85%E9%93%BE%E6%8E%A5/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-link" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M10 14a3.5 3.5 0 0 0 5 0l4 -4a3.5 3.5 0 0 0 -5 -5l-.5 .5" />
+  <path d="M14 10a3.5 3.5 0 0 0 -5 0l-4 4a3.5 3.5 0 0 0 5 5l.5 -.5" />
+</svg>
+
+
+
+                
+                <span>友情链接</span>
+            </a>
+        </li>
+        
+        <li class="menu-bottom-section">
+            <ol class="menu">
+                    
+                        <li id="i18n-switch">  
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-language" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+  <path d="M4 5h7" />
+  <path d="M9 3v2c0 4.418 -2.239 8 -5 8" />
+  <path d="M5 9c-.003 2.144 2.952 3.908 6.7 4" />
+  <path d="M12 20l4 -9l4 9" />
+  <path d="M19.1 18h-6.2" />
+</svg>
+
+
+
+                            <select name="language" title="language" onchange="window.location.href = this.selectedOptions[0].value">
+                                
+                                    <option value="https://linye9999.github.io/en/" >English</option>
+                                
+                                    <option value="https://linye9999.github.io/" selected>简体中文</option>
+                                
+                                    <option value="https://linye9999.github.io/ar/" >عربي</option>
+                                
+                            </select>
+                        </li>
+                    
+                
+
+                
+                    <li id="dark-mode-toggle">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                        <span>暗色模式</span>
+                    </li>
+                
+            </ol>
+        </li>
+    </ol>
+</aside>
+
+    <aside class="sidebar right-sidebar sticky">
+        
+            
+                
+    <section class="widget archives">
+        <div class="widget-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <line x1="5" y1="9" x2="19" y2="9" />
+  <line x1="5" y1="15" x2="19" y2="15" />
+  <line x1="11" y1="4" x2="7" y2="20" />
+  <line x1="17" y1="4" x2="13" y2="20" />
+</svg>
+
+
+
+        </div>
+        <h2 class="widget-title section-title">目录</h2>
+        
+        <div class="widget--toc">
+            <nav id="TableOfContents">
+  <ol>
+    <li><a href="#teaxteaxxteac语言代码汇编代码区别">TEA，XTEA，XXTEA，c语言代码，汇编代码区别</a></li>
+    <li><a href="#观察差异">观察差异</a></li>
+    <li><a href="#例题">例题</a></li>
+  </ol>
+</nav>
+        </div>
+    </section>
+
+            
+        
+    </aside>
+
+
+            <main class="main full-width">
+    <article class="has-image main-article">
+    <header class="article-header">
+        <div class="article-image">
+            <a href="/p/geek-week2-rereverse%E7%9A%84wp%E5%8F%8A%E5%AF%B9tea%E5%AE%B6%E6%97%8F%E7%9A%84%E5%AD%A6%E4%B9%A0/">
+                <img src="/p/geek-week2-rereverse%E7%9A%84wp%E5%8F%8A%E5%AF%B9tea%E5%AE%B6%E6%97%8F%E7%9A%84%E5%AD%A6%E4%B9%A0/cover_hu_4bcbf3aeff859f88.jpg"
+                        srcset="/p/geek-week2-rereverse%E7%9A%84wp%E5%8F%8A%E5%AF%B9tea%E5%AE%B6%E6%97%8F%E7%9A%84%E5%AD%A6%E4%B9%A0/cover_hu_4bcbf3aeff859f88.jpg 800w, /p/geek-week2-rereverse%E7%9A%84wp%E5%8F%8A%E5%AF%B9tea%E5%AE%B6%E6%97%8F%E7%9A%84%E5%AD%A6%E4%B9%A0/cover_hu_ca50a7b50318bbdc.jpg 1600w"
+                        width="800" 
+                        height="396" 
+                        loading="lazy"
+                        alt="Featured image of post Geek-week2-reReverse的wp及对TEA家族的学习" />
+                
+            </a>
+        </div>
+    
+
+    <div class="article-details">
+    
+
+    <div class="article-title-wrapper">
+        <h2 class="article-title">
+            <a href="/p/geek-week2-rereverse%E7%9A%84wp%E5%8F%8A%E5%AF%B9tea%E5%AE%B6%E6%97%8F%E7%9A%84%E5%AD%A6%E4%B9%A0/">Geek-week2-reReverse的wp及对TEA家族的学习</a>
+        </h2>
+    
+        
+    </div>
+
+    
+    
+    
+    
+    <footer class="article-time">
+        
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
+  <circle cx="18" cy="18" r="4" />
+  <path d="M15 3v4" />
+  <path d="M7 3v4" />
+  <path d="M3 11h16" />
+  <path d="M18 16.496v1.504l1 1" />
+</svg>
+                <time class="article-time--published" datetime='2025-12-15T20:12:09&#43;08:00'>Dec 15, 2025</time>
+            </div>
+        
+
+        
+    </footer>
+    
+
+    
+</div>
+
+</header>
+
+    <section class="article-content">
+    
+    
+    <h2 id="teaxteaxxteac语言代码汇编代码区别">TEA，XTEA，XXTEA，c语言代码，汇编代码区别
+</h2><ul>
+<li>
+<p><strong>前言</strong>：本文只对这三个加密进行表层的了解，不进行原理上的剖析</p>
+</li>
+<li>
+<p><strong>TEA</strong></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">tea_encrypt</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="n">v</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="kt">uint32_t</span> <span class="n">k</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">uint32_t</span> <span class="n">v0</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">v1</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">sum</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">uint32_t</span> <span class="n">delta</span> <span class="o">=</span> <span class="mh">0x9e3779b9</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">32</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">sum</span> <span class="o">+=</span> <span class="n">delta</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">v0</span> <span class="o">+=</span> <span class="p">((</span><span class="n">v1</span> <span class="o">&lt;&lt;</span> <span class="mi">4</span><span class="p">)</span> <span class="o">+</span> <span class="n">k</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">^</span> <span class="p">(</span><span class="n">v1</span> <span class="o">+</span> <span class="n">sum</span><span class="p">)</span> <span class="o">^</span> <span class="p">((</span><span class="n">v1</span> <span class="o">&gt;&gt;</span> <span class="mi">5</span><span class="p">)</span> <span class="o">+</span> <span class="n">k</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">v1</span> <span class="o">+=</span> <span class="p">((</span><span class="n">v0</span> <span class="o">&lt;&lt;</span> <span class="mi">4</span><span class="p">)</span> <span class="o">+</span> <span class="n">k</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">^</span> <span class="p">(</span><span class="n">v0</span> <span class="o">+</span> <span class="n">sum</span><span class="p">)</span> <span class="o">^</span> <span class="p">((</span><span class="n">v0</span> <span class="o">&gt;&gt;</span> <span class="mi">5</span><span class="p">)</span> <span class="o">+</span> <span class="n">k</span><span class="p">[</span><span class="mi">3</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">v0</span><span class="p">;</span> <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">v1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>
+<p><strong>XTEA</strong></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">xtea_encrypt</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="n">v</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="kt">uint32_t</span> <span class="n">k</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">uint32_t</span> <span class="n">v0</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">v1</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">sum</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">uint32_t</span> <span class="n">delta</span> <span class="o">=</span> <span class="mh">0x9e3779b9</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">32</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">v0</span> <span class="o">+=</span> <span class="p">(((</span><span class="n">v1</span> <span class="o">&lt;&lt;</span> <span class="mi">4</span><span class="p">)</span> <span class="o">^</span> <span class="p">(</span><span class="n">v1</span> <span class="o">&gt;&gt;</span> <span class="mi">5</span><span class="p">))</span> <span class="o">+</span> <span class="n">v1</span><span class="p">)</span> <span class="o">^</span> <span class="p">(</span><span class="n">sum</span> <span class="o">+</span> <span class="n">k</span><span class="p">[</span><span class="n">sum</span> <span class="o">&amp;</span> <span class="mi">3</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">sum</span> <span class="o">+=</span> <span class="n">delta</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">v1</span> <span class="o">+=</span> <span class="p">(((</span><span class="n">v0</span> <span class="o">&lt;&lt;</span> <span class="mi">4</span><span class="p">)</span> <span class="o">^</span> <span class="p">(</span><span class="n">v0</span> <span class="o">&gt;&gt;</span> <span class="mi">5</span><span class="p">))</span> <span class="o">+</span> <span class="n">v0</span><span class="p">)</span> <span class="o">^</span> <span class="p">(</span><span class="n">sum</span> <span class="o">+</span> <span class="n">k</span><span class="p">[(</span><span class="n">sum</span> <span class="o">&gt;&gt;</span> <span class="mi">11</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mi">3</span><span class="p">]);</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">v0</span><span class="p">;</span> <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">v1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>
+<p><strong>XXTEA</strong></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="cp">#define MX ((z &gt;&gt; 5 ^ y &lt;&lt; 2) + (y &gt;&gt; 3 ^ z &lt;&lt; 4)) ^ ((sum ^ y) + (k[(p &amp; 3) ^ e] ^ z))
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">xxtea_encrypt</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="o">*</span><span class="n">v</span><span class="p">,</span> <span class="kt">int</span> <span class="n">n</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">k</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">uint32_t</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">sum</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">uint32_t</span> <span class="n">delta</span> <span class="o">=</span> <span class="mh">0x9e3779b9</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">p</span><span class="p">,</span> <span class="n">rounds</span> <span class="o">=</span> <span class="mi">6</span> <span class="o">+</span> <span class="mi">52</span> <span class="o">/</span> <span class="n">n</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">z</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">    <span class="k">do</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">sum</span> <span class="o">+=</span> <span class="n">delta</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="kt">uint32_t</span> <span class="n">e</span> <span class="o">=</span> <span class="p">(</span><span class="n">sum</span> <span class="o">&gt;&gt;</span> <span class="mi">2</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mi">3</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="p">(</span><span class="n">p</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">p</span> <span class="o">&lt;</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span> <span class="n">p</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="n">y</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="n">p</span> <span class="o">+</span> <span class="mi">1</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">            <span class="n">z</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> <span class="o">+=</span> <span class="n">MX</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="n">y</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">        <span class="n">z</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="n">MX</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span> <span class="k">while</span> <span class="p">(</span><span class="o">--</span><span class="n">rounds</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>
+<p><strong>TEA的x86-64汇编实现</strong></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">  1
+</span><span class="lnt">  2
+</span><span class="lnt">  3
+</span><span class="lnt">  4
+</span><span class="lnt">  5
+</span><span class="lnt">  6
+</span><span class="lnt">  7
+</span><span class="lnt">  8
+</span><span class="lnt">  9
+</span><span class="lnt"> 10
+</span><span class="lnt"> 11
+</span><span class="lnt"> 12
+</span><span class="lnt"> 13
+</span><span class="lnt"> 14
+</span><span class="lnt"> 15
+</span><span class="lnt"> 16
+</span><span class="lnt"> 17
+</span><span class="lnt"> 18
+</span><span class="lnt"> 19
+</span><span class="lnt"> 20
+</span><span class="lnt"> 21
+</span><span class="lnt"> 22
+</span><span class="lnt"> 23
+</span><span class="lnt"> 24
+</span><span class="lnt"> 25
+</span><span class="lnt"> 26
+</span><span class="lnt"> 27
+</span><span class="lnt"> 28
+</span><span class="lnt"> 29
+</span><span class="lnt"> 30
+</span><span class="lnt"> 31
+</span><span class="lnt"> 32
+</span><span class="lnt"> 33
+</span><span class="lnt"> 34
+</span><span class="lnt"> 35
+</span><span class="lnt"> 36
+</span><span class="lnt"> 37
+</span><span class="lnt"> 38
+</span><span class="lnt"> 39
+</span><span class="lnt"> 40
+</span><span class="lnt"> 41
+</span><span class="lnt"> 42
+</span><span class="lnt"> 43
+</span><span class="lnt"> 44
+</span><span class="lnt"> 45
+</span><span class="lnt"> 46
+</span><span class="lnt"> 47
+</span><span class="lnt"> 48
+</span><span class="lnt"> 49
+</span><span class="lnt"> 50
+</span><span class="lnt"> 51
+</span><span class="lnt"> 52
+</span><span class="lnt"> 53
+</span><span class="lnt"> 54
+</span><span class="lnt"> 55
+</span><span class="lnt"> 56
+</span><span class="lnt"> 57
+</span><span class="lnt"> 58
+</span><span class="lnt"> 59
+</span><span class="lnt"> 60
+</span><span class="lnt"> 61
+</span><span class="lnt"> 62
+</span><span class="lnt"> 63
+</span><span class="lnt"> 64
+</span><span class="lnt"> 65
+</span><span class="lnt"> 66
+</span><span class="lnt"> 67
+</span><span class="lnt"> 68
+</span><span class="lnt"> 69
+</span><span class="lnt"> 70
+</span><span class="lnt"> 71
+</span><span class="lnt"> 72
+</span><span class="lnt"> 73
+</span><span class="lnt"> 74
+</span><span class="lnt"> 75
+</span><span class="lnt"> 76
+</span><span class="lnt"> 77
+</span><span class="lnt"> 78
+</span><span class="lnt"> 79
+</span><span class="lnt"> 80
+</span><span class="lnt"> 81
+</span><span class="lnt"> 82
+</span><span class="lnt"> 83
+</span><span class="lnt"> 84
+</span><span class="lnt"> 85
+</span><span class="lnt"> 86
+</span><span class="lnt"> 87
+</span><span class="lnt"> 88
+</span><span class="lnt"> 89
+</span><span class="lnt"> 90
+</span><span class="lnt"> 91
+</span><span class="lnt"> 92
+</span><span class="lnt"> 93
+</span><span class="lnt"> 94
+</span><span class="lnt"> 95
+</span><span class="lnt"> 96
+</span><span class="lnt"> 97
+</span><span class="lnt"> 98
+</span><span class="lnt"> 99
+</span><span class="lnt">100
+</span><span class="lnt">101
+</span><span class="lnt">102
+</span><span class="lnt">103
+</span><span class="lnt">104
+</span><span class="lnt">105
+</span><span class="lnt">106
+</span><span class="lnt">107
+</span><span class="lnt">108
+</span><span class="lnt">109
+</span><span class="lnt">110
+</span><span class="lnt">111
+</span><span class="lnt">112
+</span><span class="lnt">113
+</span><span class="lnt">114
+</span><span class="lnt">115
+</span><span class="lnt">116
+</span><span class="lnt">117
+</span><span class="lnt">118
+</span><span class="lnt">119
+</span><span class="lnt">120
+</span><span class="lnt">121
+</span><span class="lnt">122
+</span><span class="lnt">123
+</span><span class="lnt">124
+</span><span class="lnt">125
+</span><span class="lnt">126
+</span><span class="lnt">127
+</span><span class="lnt">128
+</span><span class="lnt">129
+</span><span class="lnt">130
+</span><span class="lnt">131
+</span><span class="lnt">132
+</span><span class="lnt">133
+</span><span class="lnt">134
+</span><span class="lnt">135
+</span><span class="lnt">136
+</span><span class="lnt">137
+</span><span class="lnt">138
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">; TEA加密函数 - x86-64汇编
+</span></span><span class="line"><span class="cl">; 参数: RDI=v[2], RSI=k[4]
+</span></span><span class="line"><span class="cl">tea_encrypt:
+</span></span><span class="line"><span class="cl">    push    rbx
+</span></span><span class="line"><span class="cl">    push    r12
+</span></span><span class="line"><span class="cl">    push    r13
+</span></span><span class="line"><span class="cl">    push    r14
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    ; 加载数据
+</span></span><span class="line"><span class="cl">    mov     eax, [rdi]          ; v0
+</span></span><span class="line"><span class="cl">    mov     ebx, [rdi+4]        ; v1
+</span></span><span class="line"><span class="cl">    mov     r12d, [rsi]         ; k[0]
+</span></span><span class="line"><span class="cl">    mov     r13d, [rsi+4]       ; k[1]
+</span></span><span class="line"><span class="cl">    mov     r14d, [rsi+8]       ; k[2]
+</span></span><span class="line"><span class="cl">    mov     r15d, [rsi+12]      ; k[3]
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    xor     ecx, ecx            ; sum = 0
+</span></span><span class="line"><span class="cl">    mov     edx, 0x9e3779b9     ; delta
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    mov     r8d, 32             ; 循环计数器
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">.tea_loop:
+</span></span><span class="line"><span class="cl">    ; sum += delta
+</span></span><span class="line"><span class="cl">    add     ecx, edx
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    ; v0 += ((v1 &lt;&lt; 4) + k[0]) ^ (v1 + sum) ^ ((v1 &gt;&gt; 5) + k[1])
+</span></span><span class="line"><span class="cl">    mov     r9d, ebx            ; v1
+</span></span><span class="line"><span class="cl">    shl     r9d, 4
+</span></span><span class="line"><span class="cl">    add     r9d, r12d           ; (v1 &lt;&lt; 4) + k[0]
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    mov     r10d, ebx           ; v1
+</span></span><span class="line"><span class="cl">    add     r10d, ecx           ; v1 + sum
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    mov     r11d, ebx           ; v1
+</span></span><span class="line"><span class="cl">    shr     r11d, 5
+</span></span><span class="line"><span class="cl">    add     r11d, r13d          ; (v1 &gt;&gt; 5) + k[1]
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    xor     r9d, r10d
+</span></span><span class="line"><span class="cl">    xor     r9d, r11d
+</span></span><span class="line"><span class="cl">    add     eax, r9d            ; 更新v0
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    ; v1 += ((v0 &lt;&lt; 4) + k[2]) ^ (v0 + sum) ^ ((v0 &gt;&gt; 5) + k[3])
+</span></span><span class="line"><span class="cl">    mov     r9d, eax            ; v0
+</span></span><span class="line"><span class="cl">    shl     r9d, 4
+</span></span><span class="line"><span class="cl">    add     r9d, r14d           ; (v0 &lt;&lt; 4) + k[2]
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    mov     r10d, eax           ; v0
+</span></span><span class="line"><span class="cl">    add     r10d, ecx           ; v0 + sum
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    mov     r11d, eax           ; v0
+</span></span><span class="line"><span class="cl">    shr     r11d, 5
+</span></span><span class="line"><span class="cl">    add     r11d, r15d          ; (v0 &gt;&gt; 5) + k[3]
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    xor     r9d, r10d
+</span></span><span class="line"><span class="cl">    xor     r9d, r11d
+</span></span><span class="line"><span class="cl">    add     ebx, r9d            ; 更新v1
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    dec     r8d
+</span></span><span class="line"><span class="cl">    jnz     .tea_loop
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    ; 存储结果
+</span></span><span class="line"><span class="cl">    mov     [rdi], eax
+</span></span><span class="line"><span class="cl">    mov     [rdi+4], ebx
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    pop     r14
+</span></span><span class="line"><span class="cl">    pop     r13
+</span></span><span class="line"><span class="cl">    pop     r12
+</span></span><span class="line"><span class="cl">    pop     rbx
+</span></span><span class="line"><span class="cl">    ret
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">; TEA解密函数
+</span></span><span class="line"><span class="cl">tea_decrypt:
+</span></span><span class="line"><span class="cl">    push    rbx
+</span></span><span class="line"><span class="cl">    push    r12
+</span></span><span class="line"><span class="cl">    push    r13
+</span></span><span class="line"><span class="cl">    push    r14
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    ; 加载数据
+</span></span><span class="line"><span class="cl">    mov     eax, [rdi]          ; v0
+</span></span><span class="line"><span class="cl">    mov     ebx, [rdi+4]        ; v1
+</span></span><span class="line"><span class="cl">    mov     r12d, [rsi]         ; k[0]
+</span></span><span class="line"><span class="cl">    mov     r13d, [rsi+4]       ; k[1]
+</span></span><span class="line"><span class="cl">    mov     r14d, [rsi+8]       ; k[2]
+</span></span><span class="line"><span class="cl">    mov     r15d, [rsi+12]      ; k[3]
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    mov     ecx, 0xC6EF3720     ; sum = delta * 32
+</span></span><span class="line"><span class="cl">    mov     edx, 0x9e3779b9     ; delta
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    mov     r8d, 32             ; 循环计数器
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">.tea_decrypt_loop:
+</span></span><span class="line"><span class="cl">    ; v1 -= ((v0 &lt;&lt; 4) + k[2]) ^ (v0 + sum) ^ ((v0 &gt;&gt; 5) + k[3])
+</span></span><span class="line"><span class="cl">    mov     r9d, eax            ; v0
+</span></span><span class="line"><span class="cl">    shl     r9d, 4
+</span></span><span class="line"><span class="cl">    add     r9d, r14d           ; (v0 &lt;&lt; 4) + k[2]
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    mov     r10d, eax           ; v0
+</span></span><span class="line"><span class="cl">    add     r10d, ecx           ; v0 + sum
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    mov     r11d, eax           ; v0
+</span></span><span class="line"><span class="cl">    shr     r11d, 5
+</span></span><span class="line"><span class="cl">    add     r11d, r15d          ; (v0 &gt;&gt; 5) + k[3]
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    xor     r9d, r10d
+</span></span><span class="line"><span class="cl">    xor     r9d, r11d
+</span></span><span class="line"><span class="cl">    sub     ebx, r9d            ; 更新v1
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    ; sum -= delta
+</span></span><span class="line"><span class="cl">    sub     ecx, edx
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    ; v0 -= ((v1 &lt;&lt; 4) + k[0]) ^ (v1 + sum) ^ ((v1 &gt;&gt; 5) + k[1])
+</span></span><span class="line"><span class="cl">    mov     r9d, ebx            ; v1
+</span></span><span class="line"><span class="cl">    shl     r9d, 4
+</span></span><span class="line"><span class="cl">    add     r9d, r12d           ; (v1 &lt;&lt; 4) + k[0]
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    mov     r10d, ebx           ; v1
+</span></span><span class="line"><span class="cl">    add     r10d, ecx           ; v1 + sum
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    mov     r11d, ebx           ; v1
+</span></span><span class="line"><span class="cl">    shr     r11d, 5
+</span></span><span class="line"><span class="cl">    add     r11d, r13d          ; (v1 &gt;&gt; 5) + k[1]
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    xor     r9d, r10d
+</span></span><span class="line"><span class="cl">    xor     r9d, r11d
+</span></span><span class="line"><span class="cl">    sub     eax, r9d            ; 更新v0
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    dec     r8d
+</span></span><span class="line"><span class="cl">    jnz     .tea_decrypt_loop
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    ; 存储结果
+</span></span><span class="line"><span class="cl">    mov     [rdi], eax
+</span></span><span class="line"><span class="cl">    mov     [rdi+4], ebx
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    pop     r14
+</span></span><span class="line"><span class="cl">    pop     r13
+</span></span><span class="line"><span class="cl">    pop     r12
+</span></span><span class="line"><span class="cl">    pop     rbx
+</span></span><span class="line"><span class="cl">    ret
+</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>
+<p><strong>XTEA的x86-64汇编实现</strong></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">; XTEA加密函数 - x86-64汇编
+</span></span><span class="line"><span class="cl">; 参数: RDI=v[2], RSI=k[4]
+</span></span><span class="line"><span class="cl">xtea_encrypt:
+</span></span><span class="line"><span class="cl">    push    rbx
+</span></span><span class="line"><span class="cl">    push    r12
+</span></span><span class="line"><span class="cl">    push    r13
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    ; 加载数据
+</span></span><span class="line"><span class="cl">    mov     eax, [rdi]          ; v0
+</span></span><span class="line"><span class="cl">    mov     ebx, [rdi+4]        ; v1
+</span></span><span class="line"><span class="cl">    mov     r12, rsi            ; k指针
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    xor     ecx, ecx            ; sum = 0
+</span></span><span class="line"><span class="cl">    mov     edx, 0x9e3779b9     ; delta
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    mov     r8d, 32             ; 循环计数器
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">.xtea_loop:
+</span></span><span class="line"><span class="cl">    ; v0 += (((v1 &lt;&lt; 4) ^ (v1 &gt;&gt; 5)) + v1) ^ (sum + k[sum &amp; 3])
+</span></span><span class="line"><span class="cl">    mov     r9d, ebx            ; v1
+</span></span><span class="line"><span class="cl">    mov     r10d, ebx
+</span></span><span class="line"><span class="cl">    shl     r9d, 4
+</span></span><span class="line"><span class="cl">    shr     r10d, 5
+</span></span><span class="line"><span class="cl">    xor     r9d, r10d
+</span></span><span class="line"><span class="cl">    add     r9d, ebx            ; ((v1 &lt;&lt; 4) ^ (v1 &gt;&gt; 5)) + v1
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    ; 计算 sum + k[sum &amp; 3]
+</span></span><span class="line"><span class="cl">    mov     r10d, ecx           ; sum
+</span></span><span class="line"><span class="cl">    and     r10d, 3             ; sum &amp; 3
+</span></span><span class="line"><span class="cl">    mov     r11d, [r12 + r10*4] ; k[sum &amp; 3]
+</span></span><span class="line"><span class="cl">    add     r11d, ecx           ; sum + k[sum &amp; 3]
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    xor     r9d, r11d
+</span></span><span class="line"><span class="cl">    add     eax, r9d            ; 更新v0
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    ; sum += delta
+</span></span><span class="line"><span class="cl">    add     ecx, edx
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    ; v1 += (((v0 &lt;&lt; 4) ^ (v0 &gt;&gt; 5)) + v0) ^ (sum + k[(sum &gt;&gt; 11) &amp; 3])
+</span></span><span class="line"><span class="cl">    mov     r9d, eax            ; v0
+</span></span><span class="line"><span class="cl">    mov     r10d, eax
+</span></span><span class="line"><span class="cl">    shl     r9d, 4
+</span></span><span class="line"><span class="cl">    shr     r10d, 5
+</span></span><span class="line"><span class="cl">    xor     r9d, r10d
+</span></span><span class="line"><span class="cl">    add     r9d, eax            ; ((v0 &lt;&lt; 4) ^ (v0 &gt;&gt; 5)) + v0
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    ; 计算 sum + k[(sum &gt;&gt; 11) &amp; 3]
+</span></span><span class="line"><span class="cl">    mov     r10d, ecx           ; sum
+</span></span><span class="line"><span class="cl">    shr     r10d, 11
+</span></span><span class="line"><span class="cl">    and     r10d, 3             ; (sum &gt;&gt; 11) &amp; 3
+</span></span><span class="line"><span class="cl">    mov     r11d, [r12 + r10*4] ; k[(sum &gt;&gt; 11) &amp; 3]
+</span></span><span class="line"><span class="cl">    add     r11d, ecx           ; sum + k[(sum &gt;&gt; 11) &amp; 3]
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    xor     r9d, r11d
+</span></span><span class="line"><span class="cl">    add     ebx, r9d            ; 更新v1
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    dec     r8d
+</span></span><span class="line"><span class="cl">    jnz     .xtea_loop
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    ; 存储结果
+</span></span><span class="line"><span class="cl">    mov     [rdi], eax
+</span></span><span class="line"><span class="cl">    mov     [rdi+4], ebx
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    pop     r13
+</span></span><span class="line"><span class="cl">    pop     r12
+</span></span><span class="line"><span class="cl">    pop     rbx
+</span></span><span class="line"><span class="cl">    ret
+</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>
+<p><strong>XXXTEA的x86-64汇编实现</strong></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">  1
+</span><span class="lnt">  2
+</span><span class="lnt">  3
+</span><span class="lnt">  4
+</span><span class="lnt">  5
+</span><span class="lnt">  6
+</span><span class="lnt">  7
+</span><span class="lnt">  8
+</span><span class="lnt">  9
+</span><span class="lnt"> 10
+</span><span class="lnt"> 11
+</span><span class="lnt"> 12
+</span><span class="lnt"> 13
+</span><span class="lnt"> 14
+</span><span class="lnt"> 15
+</span><span class="lnt"> 16
+</span><span class="lnt"> 17
+</span><span class="lnt"> 18
+</span><span class="lnt"> 19
+</span><span class="lnt"> 20
+</span><span class="lnt"> 21
+</span><span class="lnt"> 22
+</span><span class="lnt"> 23
+</span><span class="lnt"> 24
+</span><span class="lnt"> 25
+</span><span class="lnt"> 26
+</span><span class="lnt"> 27
+</span><span class="lnt"> 28
+</span><span class="lnt"> 29
+</span><span class="lnt"> 30
+</span><span class="lnt"> 31
+</span><span class="lnt"> 32
+</span><span class="lnt"> 33
+</span><span class="lnt"> 34
+</span><span class="lnt"> 35
+</span><span class="lnt"> 36
+</span><span class="lnt"> 37
+</span><span class="lnt"> 38
+</span><span class="lnt"> 39
+</span><span class="lnt"> 40
+</span><span class="lnt"> 41
+</span><span class="lnt"> 42
+</span><span class="lnt"> 43
+</span><span class="lnt"> 44
+</span><span class="lnt"> 45
+</span><span class="lnt"> 46
+</span><span class="lnt"> 47
+</span><span class="lnt"> 48
+</span><span class="lnt"> 49
+</span><span class="lnt"> 50
+</span><span class="lnt"> 51
+</span><span class="lnt"> 52
+</span><span class="lnt"> 53
+</span><span class="lnt"> 54
+</span><span class="lnt"> 55
+</span><span class="lnt"> 56
+</span><span class="lnt"> 57
+</span><span class="lnt"> 58
+</span><span class="lnt"> 59
+</span><span class="lnt"> 60
+</span><span class="lnt"> 61
+</span><span class="lnt"> 62
+</span><span class="lnt"> 63
+</span><span class="lnt"> 64
+</span><span class="lnt"> 65
+</span><span class="lnt"> 66
+</span><span class="lnt"> 67
+</span><span class="lnt"> 68
+</span><span class="lnt"> 69
+</span><span class="lnt"> 70
+</span><span class="lnt"> 71
+</span><span class="lnt"> 72
+</span><span class="lnt"> 73
+</span><span class="lnt"> 74
+</span><span class="lnt"> 75
+</span><span class="lnt"> 76
+</span><span class="lnt"> 77
+</span><span class="lnt"> 78
+</span><span class="lnt"> 79
+</span><span class="lnt"> 80
+</span><span class="lnt"> 81
+</span><span class="lnt"> 82
+</span><span class="lnt"> 83
+</span><span class="lnt"> 84
+</span><span class="lnt"> 85
+</span><span class="lnt"> 86
+</span><span class="lnt"> 87
+</span><span class="lnt"> 88
+</span><span class="lnt"> 89
+</span><span class="lnt"> 90
+</span><span class="lnt"> 91
+</span><span class="lnt"> 92
+</span><span class="lnt"> 93
+</span><span class="lnt"> 94
+</span><span class="lnt"> 95
+</span><span class="lnt"> 96
+</span><span class="lnt"> 97
+</span><span class="lnt"> 98
+</span><span class="lnt"> 99
+</span><span class="lnt">100
+</span><span class="lnt">101
+</span><span class="lnt">102
+</span><span class="lnt">103
+</span><span class="lnt">104
+</span><span class="lnt">105
+</span><span class="lnt">106
+</span><span class="lnt">107
+</span><span class="lnt">108
+</span><span class="lnt">109
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">; XXTEA加密函数 - x86-64汇编
+</span></span><span class="line"><span class="cl">; 参数: RDI=v[], ESI=n, RDX=k[4]
+</span></span><span class="line"><span class="cl">xxtea_encrypt:
+</span></span><span class="line"><span class="cl">    push    rbx
+</span></span><span class="line"><span class="cl">    push    r12
+</span></span><span class="line"><span class="cl">    push    r13
+</span></span><span class="line"><span class="cl">    push    r14
+</span></span><span class="line"><span class="cl">    push    r15
+</span></span><span class="line"><span class="cl">    push    rbp
+</span></span><span class="line"><span class="cl">    mov     rbp, rsp
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    ; 保存参数
+</span></span><span class="line"><span class="cl">    mov     r12, rdi            ; v[]
+</span></span><span class="line"><span class="cl">    mov     r13d, esi           ; n
+</span></span><span class="line"><span class="cl">    mov     r14, rdx            ; k[4]
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    ; 计算轮数: rounds = 6 + 52/n
+</span></span><span class="line"><span class="cl">    mov     eax, 52
+</span></span><span class="line"><span class="cl">    cdq
+</span></span><span class="line"><span class="cl">    idiv    r13d
+</span></span><span class="line"><span class="cl">    add     eax, 6
+</span></span><span class="line"><span class="cl">    mov     r15d, eax           ; rounds
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    ; 加载z = v[n-1]
+</span></span><span class="line"><span class="cl">    mov     ecx, r13d
+</span></span><span class="line"><span class="cl">    dec     ecx
+</span></span><span class="line"><span class="cl">    mov     eax, [r12 + rcx*4]  ; z = v[n-1]
+</span></span><span class="line"><span class="cl">    mov     [rbp-8], eax        ; 保存z在栈上
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    mov     edx, 0x9e3779b9     ; delta
+</span></span><span class="line"><span class="cl">    xor     ebx, ebx            ; sum = 0
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">.round_loop:
+</span></span><span class="line"><span class="cl">    add     ebx, edx            ; sum += delta
+</span></span><span class="line"><span class="cl">    mov     eax, ebx
+</span></span><span class="line"><span class="cl">    shr     eax, 2
+</span></span><span class="line"><span class="cl">    and     eax, 3              ; e = (sum &gt;&gt; 2) &amp; 3
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    xor     ecx, ecx            ; p = 0
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">.block_loop:
+</span></span><span class="line"><span class="cl">    ; 计算y = v[p+1]
+</span></span><span class="line"><span class="cl">    mov     edi, ecx
+</span></span><span class="line"><span class="cl">    inc     edi
+</span></span><span class="line"><span class="cl">    cmp     edi, r13d
+</span></span><span class="line"><span class="cl">    jl      .not_wrap
+</span></span><span class="line"><span class="cl">    xor     edi, edi            ; 如果p+1 == n，则y = v[0]
+</span></span><span class="line"><span class="cl">.not_wrap:
+</span></span><span class="line"><span class="cl">    mov     edi, [r12 + rdi*4]  ; y = v[p+1]
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    ; 计算MX
+</span></span><span class="line"><span class="cl">    ; MX = ((z &gt;&gt; 5 ^ y &lt;&lt; 2) + (y &gt;&gt; 3 ^ z &lt;&lt; 4)) ^ ((sum ^ y) + (k[(p &amp; 3) ^ e] ^ z))
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    ; 第一部分: (z &gt;&gt; 5 ^ y &lt;&lt; 2)
+</span></span><span class="line"><span class="cl">    mov     esi, [rbp-8]        ; z
+</span></span><span class="line"><span class="cl">    mov     r8d, esi
+</span></span><span class="line"><span class="cl">    shr     r8d, 5              ; z &gt;&gt; 5
+</span></span><span class="line"><span class="cl">    mov     r9d, edi            ; y
+</span></span><span class="line"><span class="cl">    shl     r9d, 2              ; y &lt;&lt; 2
+</span></span><span class="line"><span class="cl">    xor     r8d, r9d            ; z &gt;&gt; 5 ^ y &lt;&lt; 2
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    ; 第二部分: (y &gt;&gt; 3 ^ z &lt;&lt; 4)
+</span></span><span class="line"><span class="cl">    mov     r9d, edi            ; y
+</span></span><span class="line"><span class="cl">    shr     r9d, 3              ; y &gt;&gt; 3
+</span></span><span class="line"><span class="cl">    mov     r10d, esi           ; z
+</span></span><span class="line"><span class="cl">    shl     r10d, 4             ; z &lt;&lt; 4
+</span></span><span class="line"><span class="cl">    xor     r9d, r10d           ; y &gt;&gt; 3 ^ z &lt;&lt; 4
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    ; 第三部分: 相加
+</span></span><span class="line"><span class="cl">    add     r8d, r9d            ; (z &gt;&gt; 5 ^ y &lt;&lt; 2) + (y &gt;&gt; 3 ^ z &lt;&lt; 4)
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    ; 第四部分: (sum ^ y)
+</span></span><span class="line"><span class="cl">    mov     r9d, ebx            ; sum
+</span></span><span class="line"><span class="cl">    xor     r9d, edi            ; sum ^ y
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    ; 第五部分: k[(p &amp; 3) ^ e] ^ z
+</span></span><span class="line"><span class="cl">    mov     r10d, ecx           ; p
+</span></span><span class="line"><span class="cl">    and     r10d, 3             ; p &amp; 3
+</span></span><span class="line"><span class="cl">    xor     r10d, eax           ; (p &amp; 3) ^ e
+</span></span><span class="line"><span class="cl">    mov     r11d, [r14 + r10*4] ; k[(p &amp; 3) ^ e]
+</span></span><span class="line"><span class="cl">    xor     r11d, esi           ; k[(p &amp; 3) ^ e] ^ z
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    ; 第六部分: 相加
+</span></span><span class="line"><span class="cl">    add     r9d, r11d           ; (sum ^ y) + (k[(p &amp; 3) ^ e] ^ z)
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    ; 第七部分: 最终异或
+</span></span><span class="line"><span class="cl">    xor     r8d, r9d            ; MX结果
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    ; 更新v[p]和z
+</span></span><span class="line"><span class="cl">    add     [r12 + rcx*4], r8d  ; v[p] += MX
+</span></span><span class="line"><span class="cl">    mov     eax, [r12 + rcx*4]  ; z = v[p]
+</span></span><span class="line"><span class="cl">    mov     [rbp-8], eax
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    ; 循环控制
+</span></span><span class="line"><span class="cl">    inc     ecx
+</span></span><span class="line"><span class="cl">    cmp     ecx, r13d
+</span></span><span class="line"><span class="cl">    jl      .block_loop
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    ; 外层循环控制
+</span></span><span class="line"><span class="cl">    dec     r15d
+</span></span><span class="line"><span class="cl">    jnz     .round_loop
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    pop     rbp
+</span></span><span class="line"><span class="cl">    pop     r15
+</span></span><span class="line"><span class="cl">    pop     r14
+</span></span><span class="line"><span class="cl">    pop     r13
+</span></span><span class="line"><span class="cl">    pop     r12
+</span></span><span class="line"><span class="cl">    pop     rbx
+</span></span><span class="line"><span class="cl">    ret
+</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+</ul>
+<h2 id="观察差异">观察差异
+</h2><ul>
+<li>tea特征，较多左移，右移，异或操作，32/64这种轮数，key一般比较整128bit，有魔数delta，一般为0x9E3779B9</li>
+<li>tea和xtea，xxtea这俩的一大明显差别是后二者多了&amp;操作，也就使得汇编多了<code>and</code>指令</li>
+<li>xtea和xxtea的差别是xxtea调用的寄存器比较多，操作复杂</li>
+</ul>
+<h2 id="例题">例题
+</h2><p>极客大挑战2025week2，reReverse</p>
+<p>这题主要难点在于汇编中那一段爆红的汇编代码。</p>
+<p>出题人：利用信号机制倒置了执行流，可以使用gdb的忽略信号机制调试。（这玩意挺有意思的，先鸽着有时间写个文章学一学）</p>
+<p>所以这题要不就像无机盐大手子一样直接看汇编盯帧，要不然就用idapython，讲执行流倒置回来。</p>
+<p>由于本人脚本编写能力有限，所以先使用盯帧法。于是就有了上面的关于tea，xtea，xxtea加密的识别</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">.text:0000000000400C80     loc_400C80:                             ; CODE XREF: .text:000000000040094A↑j
+</span></span><span class="line"><span class="cl">.text:0000000000400C80                     mov     dword ptr [rsp+0Ch], 0C0FFh
+</span></span><span class="line"><span class="cl">.text:0000000000400C88                     mov     [rsp+2Ch], r14d
+</span></span><span class="line"><span class="cl">.text:0000000000400C8D                     mov     r10d, [rsp+64h]
+</span></span><span class="line"><span class="cl">.text:0000000000400C92                     mov     r11d, [rsp+60h]
+</span></span><span class="line"><span class="cl">.text:0000000000400C97                     mov     dword ptr [rsp+10h], 0DEADh
+</span></span><span class="line"><span class="cl">.text:0000000000400C9F                     mov     ebp, [rsp+5Ch]
+</span></span><span class="line"><span class="cl">.text:0000000000400CA3                     mov     ebx, [rsp+58h]
+</span></span><span class="line"><span class="cl">.text:0000000000400CA7                     mov     r8d, [rsp+54h]
+</span></span><span class="line"><span class="cl">.text:0000000000400CAC                     mov     dword ptr [rsp+14h], 0BEEFh
+</span></span><span class="line"><span class="cl">.text:0000000000400CB4                     mov     edx, [rsp+50h]
+</span></span><span class="line"><span class="cl">.text:0000000000400CB8                     mov     dword ptr [rsp+18h], 5A7Dh
+</span></span><span class="line"><span class="cl">.text:0000000000400CC0                     mov     ecx, [rsp+4Ch]
+</span></span><span class="line"><span class="cl">.text:0000000000400CC4                     mov     dword ptr [rsp+1Ch], 0C0FFh
+</span></span><span class="line"><span class="cl">.text:0000000000400CCC                     mov     esi, [rsp+48h]
+</span></span><span class="line"><span class="cl">.text:0000000000400CD0                     mov     dword ptr [rsp+20h], 0DEADh
+</span></span><span class="line"><span class="cl">.text:0000000000400CD8                     mov     r15d, 0C0FFh
+</span></span><span class="line"><span class="cl">.text:0000000000400CDE                     mov     edi, [rsp+44h]
+</span></span><span class="line"><span class="cl">.text:0000000000400CE2                     mov     dword ptr [rsp+24h], 0BEEFh
+</span></span><span class="line"><span class="cl">.text:0000000000400CEA                     mov     eax, 9E3779B9h
+</span></span><span class="line"><span class="cl">.text:0000000000400CEF                     mov     r9d, [rsp+40h]
+</span></span><span class="line"><span class="cl">.text:0000000000400CF4                     mov     dword ptr [rsp+28h], 5A7Dh
+</span></span><span class="line"><span class="cl">.text:0000000000400CFC                     mov     r14d, 5A7Dh
+</span></span><span class="line"><span class="cl">.text:0000000000400D02                     jnz     short loc_400D53 ; Jump if Not Zero (ZF=0)
+</span></span><span class="line"><span class="cl">.text:0000000000400D04                     cmp     rdx, 28h ; &#39;(&#39;  ; Compare Two Operands
+</span></span><span class="line"><span class="cl">.text:0000000000400D08                     jz      loc_4008B7      ; Jump if Zero (ZF=1)
+</span></span><span class="line"><span class="cl">.text:0000000000400D0E
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>这里有魔数0x9E3779B9h，基本确定是tea加密家族，顺带把key得了</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">.text:0000000000400D8E                     call    _fgets          ; Call Procedure
+</span></span><span class="line"><span class="cl">.text:0000000000400D93                     mov     rdi, rbx
+</span></span><span class="line"><span class="cl">.text:0000000000400D96                     mov     esi, 64h ; &#39;d&#39;
+</span></span><span class="line"><span class="cl">.text:0000000000400D9B                     mov     rdx, cs:stdin
+</span></span><span class="line"><span class="cl">.text:0000000000400DA2                     call    ___printf_chk   ; Call Procedure
+</span></span><span class="line"><span class="cl">.text:0000000000400DA7                     movaps  xmmword ptr [rsp+30h], xmm0 ; Move Aligned Four Packed Single-FP
+</span></span><span class="line"><span class="cl">.text:0000000000400DAC                     lea     rbx, [rsp+40h]  ; Load Effective Address
+</span></span><span class="line"><span class="cl">.text:0000000000400DB1                     xor     eax, eax        ; Logical Exclusive OR
+</span></span><span class="line"><span class="cl">.text:0000000000400DB3                     mov     [rsp+0A8h], rax
+</span></span><span class="line"><span class="cl">.text:0000000000400DBB                     mov     rax, fs:28h
+</span></span><span class="line"><span class="cl">.text:0000000000400DC4                     movdqa  xmm0, cs:xmmword_401090 ; Move Aligned Double Quadword
+</span></span><span class="line"><span class="cl">.text:0000000000400DCC                     sub     rsp, 0B8h       ; Integer Subtraction
+</span></span><span class="line"><span class="cl">.text:0000000000400DD3                     push    rbx
+</span></span><span class="line"><span class="cl">.text:0000000000400DD4                     push    rbp
+</span></span><span class="line"><span class="cl">.text:0000000000400DD5                     push    r12
+</span></span><span class="line"><span class="cl">.text:0000000000400DD7                     push    r13
+</span></span><span class="line"><span class="cl">.text:0000000000400DD9                     push    r14
+</span></span><span class="line"><span class="cl">.text:0000000000400DDB                     mov     edi, 1
+</span></span><span class="line"><span class="cl">.text:0000000000400DE0                     lea     rsi, unk_401074 ; Load Effective Address
+</span></span><span class="line"><span class="cl">.text:0000000000400DE7                     push    r15
+</span></span><span class="line"><span class="cl">.text:0000000000400DE9                     endbr64                 ; Terminate an Indirect Branch in 64-bit Mode
+</span></span><span class="line"><span class="cl">.text:0000000000400DED                  
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>这里出现很多寄存器</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">.text:0000000000400BBC     loc_400BBC:                             ; CODE XREF: .text:0000000000400C7B↓j
+</span></span><span class="line"><span class="cl">.text:0000000000400BBC                     mov     r14d, [rsp+r12*4+30h]
+</span></span><span class="line"><span class="cl">.text:0000000000400BC1                     mov     [rsp+24h], r14d
+</span></span><span class="line"><span class="cl">.text:0000000000400BC6                     mov     r14d, [rsp+r13*4+30h]
+</span></span><span class="line"><span class="cl">.text:0000000000400BCB                     mov     [rsp+20h], r14d
+</span></span><span class="line"><span class="cl">.text:0000000000400BD0                     and     r13d, 3         ; Logical AND
+</span></span><span class="line"><span class="cl">.text:0000000000400BD4                     xor     r13d, 7         ; Logical Exclusive OR
+</span></span><span class="line"><span class="cl">.text:0000000000400BD8                     and     r12d, 3         ; Logical AND
+</span></span><span class="line"><span class="cl">.text:0000000000400BDC                     mov     r13d, r12d
+</span></span><span class="line"><span class="cl">.text:0000000000400BDF                     mov     r14d, [rsp+r13*4+30h]
+</span></span><span class="line"><span class="cl">.text:0000000000400BE4                     mov     [rsp+1Ch], r14d
+</span></span><span class="line"><span class="cl">.text:0000000000400BE9                     and     r13d, 3         ; Logical AND
+</span></span><span class="line"><span class="cl">.text:0000000000400BED                     xor     r13d, 6         ; Logical Exclusive OR
+</span></span><span class="line"><span class="cl">.text:0000000000400BF1                     mov     r13d, r12d
+</span></span><span class="line"><span class="cl">.text:0000000000400BF4                     mov     r14d, [rsp+r13*4+30h]
+</span></span><span class="line"><span class="cl">.text:0000000000400BF9                     mov     [rsp+18h], r14d
+</span></span><span class="line"><span class="cl">.text:0000000000400BFE                     and     r13d, 3         ; Logical AND
+</span></span><span class="line"><span class="cl">.text:0000000000400C02                     xor     r13d, 5         ; Logical Exclusive OR
+</span></span><span class="line"><span class="cl">.text:0000000000400C06                     mov     r13d, r12d
+</span></span><span class="line"><span class="cl">.text:0000000000400C09                     mov     r14d, [rsp+r13*4+30h]
+</span></span><span class="line"><span class="cl">.text:0000000000400C0E                     mov     [rsp+14h], r14d
+</span></span><span class="line"><span class="cl">.text:0000000000400C13                     and     r13d, 3         ; Logical AND
+</span></span><span class="line"><span class="cl">.text:0000000000400C17                     mov     r13d, r12d
+</span></span><span class="line"><span class="cl">.text:0000000000400C1A                     mov     r14d, [rsp+r13*4+30h]
+</span></span><span class="line"><span class="cl">.text:0000000000400C1F                     mov     [rsp+10h], r14d
+</span></span><span class="line"><span class="cl">.text:0000000000400C24                     and     r13d, 3         ; Logical AND
+</span></span><span class="line"><span class="cl">.text:0000000000400C28                     not     r13d            ; One&#39;s Complement Negation
+</span></span><span class="line"><span class="cl">.text:0000000000400C2B                     mov     r13d, r12d
+</span></span><span class="line"><span class="cl">.text:0000000000400C2E                     mov     r14d, [rsp+r13*4+30h]
+</span></span><span class="line"><span class="cl">.text:0000000000400C33                     mov     [rsp+0Ch], r14d
+</span></span><span class="line"><span class="cl">.text:0000000000400C38                     and     r13d, 3         ; Logical AND
+</span></span><span class="line"><span class="cl">.text:0000000000400C3C                     xor     r13d, 2         ; Logical Exclusive OR
+</span></span><span class="line"><span class="cl">.text:0000000000400C40                     mov     r13d, r12d
+</span></span><span class="line"><span class="cl">.text:0000000000400C43                     mov     r14d, [rsp+r13*4+30h]
+</span></span><span class="line"><span class="cl">.text:0000000000400C48                     mov     [rsp+2Ch], r14d
+</span></span><span class="line"><span class="cl">.text:0000000000400C4D                     and     r13d, 3         ; Logical AND
+</span></span><span class="line"><span class="cl">.text:0000000000400C51                     xor     r13d, 1         ; Logical Exclusive OR
+</span></span><span class="line"><span class="cl">.text:0000000000400C55                     mov     r13d, r12d
+</span></span><span class="line"><span class="cl">.text:0000000000400C58                     mov     r14d, [rsp+r13*4+30h]
+</span></span><span class="line"><span class="cl">.text:0000000000400C5D                     and     r13d, 3         ; Logical AND
+</span></span><span class="line"><span class="cl">.text:0000000000400C61                     mov     r13d, r12d
+</span></span><span class="line"><span class="cl">.text:0000000000400C64                     mov     r15d, [rsp+r13*4+30h]
+</span></span><span class="line"><span class="cl">.text:0000000000400C69                     and     r13d, 3         ; Logical AND
+</span></span><span class="line"><span class="cl">.text:0000000000400C6D                     xor     r13d, 9         ; Logical Exclusive OR
+</span></span><span class="line"><span class="cl">.text:0000000000400C71                     mov     r13d, r12d
+</span></span><span class="line"><span class="cl">.text:0000000000400C74                     shr     r12d, 2         ; Shift Logical Right
+</span></span><span class="line"><span class="cl">.text:0000000000400C78                     mov     r12d, eax
+</span></span><span class="line"><span class="cl">.text:0000000000400C7B                     jmp     loc_400BBC      ; Jump
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>这里出现了很多and</p>
+<p>基本确定xxtea加密，密文是硬编码的也可以直接得到，但是这个密文顺序是不确定的需要暴力枚举</p>
+<p>exp如下</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span><span class="lnt">71
+</span><span class="lnt">72
+</span><span class="lnt">73
+</span><span class="lnt">74
+</span><span class="lnt">75
+</span><span class="lnt">76
+</span><span class="lnt">77
+</span><span class="lnt">78
+</span><span class="lnt">79
+</span><span class="lnt">80
+</span><span class="lnt">81
+</span><span class="lnt">82
+</span><span class="lnt">83
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">itertools</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">time</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># XXTEA核心常量（与标准脚本一致）</span>
+</span></span><span class="line"><span class="cl"><span class="n">DELTA</span> <span class="o">=</span> <span class="mh">0x9E3779B9</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">xxtea_dec</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="n">DELTA</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;完全对齐标准脚本的XXTEA解密函数（带32位无符号截断）&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">v</span>
+</span></span><span class="line"><span class="cl">    <span class="n">r</span> <span class="o">=</span> <span class="mi">6</span> <span class="o">+</span> <span class="mi">52</span> <span class="o">//</span> <span class="n">n</span>
+</span></span><span class="line"><span class="cl">    <span class="n">s</span> <span class="o">=</span> <span class="p">(</span><span class="n">r</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">delta</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">r</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="n">s</span> <span class="o">=</span> <span class="p">(</span><span class="n">s</span> <span class="o">-</span> <span class="n">delta</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span>
+</span></span><span class="line"><span class="cl">        <span class="n">e</span> <span class="o">=</span> <span class="p">(</span><span class="n">s</span> <span class="o">&gt;&gt;</span> <span class="mi">2</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mi">3</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">            <span class="n">y</span> <span class="o">=</span> <span class="n">v</span><span class="p">[(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="n">n</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">            <span class="n">z</span> <span class="o">=</span> <span class="n">v</span><span class="p">[(</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="n">n</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">            <span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="p">(((</span><span class="n">z</span><span class="o">&gt;&gt;</span><span class="mi">5</span> <span class="o">^</span> <span class="n">y</span><span class="o">&lt;&lt;</span><span class="mi">2</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">y</span><span class="o">&gt;&gt;</span><span class="mi">3</span> <span class="o">^</span> <span class="n">z</span><span class="o">&lt;&lt;</span><span class="mi">4</span><span class="p">))</span> <span class="o">^</span> <span class="p">((</span><span class="n">s</span> <span class="o">^</span> <span class="n">y</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">k</span><span class="p">[(</span><span class="n">i</span><span class="o">&amp;</span><span class="mi">3</span><span class="p">)</span> <span class="o">^</span> <span class="n">e</span><span class="p">]</span> <span class="o">^</span> <span class="n">z</span><span class="p">))))</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">v</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">uint32_array_to_bytes</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;32位整数数组转小端序字节串（高效实现）&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="sa">b</span><span class="s2">&#34;&#34;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">to_bytes</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="s2">&#34;little&#34;</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">arr</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">check_syc_format</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">    <span class="s2">&#34;&#34;&#34;校验字符串是否符合SYC</span><span class="si">{}</span><span class="s2">格式：以SYC{开头、}结尾，中间为可打印字符&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">:</span>  <span class="c1"># 至少SYC{}（5个字符）</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="kc">False</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="ow">not</span> <span class="n">s</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&#34;SYC{&#34;</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">s</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&#34;}&#34;</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="kc">False</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># 检查中间字符是否为可打印ASCII（32-126）</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">s</span><span class="p">[</span><span class="mi">3</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="ow">not</span> <span class="mi">32</span> <span class="o">&lt;=</span> <span class="nb">ord</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">126</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="kc">False</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="kc">True</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 配置参数</span>
+</span></span><span class="line"><span class="cl"><span class="n">dk</span> <span class="o">=</span> <span class="p">[</span><span class="mh">0xDEAD</span><span class="p">,</span> <span class="mh">0xBEEF</span><span class="p">,</span> <span class="mh">0x5A7D</span><span class="p">,</span> <span class="mh">0xC0FF</span><span class="p">]</span>  <span class="c1"># 固定密钥</span>
+</span></span><span class="line"><span class="cl"><span class="n">dm</span> <span class="o">=</span> <span class="p">[</span><span class="mh">0x2973bd37</span><span class="p">,</span> <span class="mh">0x08662435</span><span class="p">,</span> <span class="mh">0x0eef6889</span><span class="p">,</span> <span class="mh">0xae421991</span><span class="p">,</span> <span class="mh">0xd7b702cf</span><span class="p">,</span> <span class="mh">0x3b98e6e6</span><span class="p">,</span> <span class="mh">0x352adccf</span><span class="p">,</span> <span class="mh">0xbfc393ab</span><span class="p">,</span> <span class="mh">0xb3c20088</span><span class="p">,</span> <span class="mh">0x1ba99aa3</span><span class="p">]</span>  <span class="c1"># 10个密文块</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&#34;__main__&#34;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">total_perms</span> <span class="o">=</span> <span class="mi">3628800</span>  <span class="c1"># 10!的总排列数</span>
+</span></span><span class="line"><span class="cl">    <span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="n">found</span> <span class="o">=</span> <span class="kc">False</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;开始遍历</span><span class="si">{</span><span class="n">total_perms</span><span class="si">}</span><span class="s2">种密文块排列...&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;=&#34;</span><span class="o">*</span><span class="mi">50</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="c1"># 遍历所有密文块排列（itertools.permutations生成不重复排列）</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">perm</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">permutations</span><span class="p">(</span><span class="n">dm</span><span class="p">)):</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 每10000次迭代打印进度</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">idx</span> <span class="o">%</span> <span class="mi">10000</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
+</span></span><span class="line"><span class="cl">            <span class="n">speed</span> <span class="o">=</span> <span class="n">idx</span> <span class="o">/</span> <span class="n">elapsed</span> <span class="k">if</span> <span class="n">elapsed</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">            <span class="n">remaining</span> <span class="o">=</span> <span class="p">(</span><span class="n">total_perms</span> <span class="o">-</span> <span class="n">idx</span><span class="p">)</span> <span class="o">/</span> <span class="n">speed</span> <span class="k">if</span> <span class="n">speed</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;进度：</span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">total_perms</span><span class="si">}</span><span class="s2"> | 耗时：</span><span class="si">{</span><span class="n">elapsed</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">s | 速度：</span><span class="si">{</span><span class="n">speed</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2">次/s | 剩余：</span><span class="si">{</span><span class="n">remaining</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">s&#34;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&#34;</span><span class="se">\r</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        
+</span></span><span class="line"><span class="cl">        <span class="c1"># 解密当前排列的密文块</span>
+</span></span><span class="line"><span class="cl">        <span class="n">decrypted_v</span> <span class="o">=</span> <span class="n">xxtea_dec</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">perm</span><span class="p">),</span> <span class="n">dk</span><span class="o">.</span><span class="n">copy</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 转换为字节串并去除末尾补零</span>
+</span></span><span class="line"><span class="cl">        <span class="n">decrypted_bytes</span> <span class="o">=</span> <span class="n">uint32_array_to_bytes</span><span class="p">(</span><span class="n">decrypted_v</span><span class="p">)</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="sa">b</span><span class="s2">&#34;</span><span class="se">\x00</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="c1"># 解码为字符串（忽略无效字符）</span>
+</span></span><span class="line"><span class="cl">        <span class="n">decrypted_str</span> <span class="o">=</span> <span class="n">decrypted_bytes</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&#34;utf-8&#34;</span><span class="p">,</span> <span class="s2">&#34;ignore&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        
+</span></span><span class="line"><span class="cl">        <span class="c1"># 校验是否符合SYC{}格式</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="n">check_syc_format</span><span class="p">(</span><span class="n">decrypted_str</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">            <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;</span><span class="se">\n</span><span class="s2">&#34;</span> <span class="o">+</span> <span class="s2">&#34;=&#34;</span><span class="o">*</span><span class="mi">50</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;✅ 找到符合格式的明文！&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;密文块正确顺序：</span><span class="si">{</span><span class="p">[</span><span class="nb">hex</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">perm</span><span class="p">]</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;解密后的明文：</span><span class="si">{</span><span class="n">decrypted_str</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;=&#34;</span><span class="o">*</span><span class="mi">50</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="n">found</span> <span class="o">=</span> <span class="kc">True</span>
+</span></span><span class="line"><span class="cl">            <span class="k">break</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="ow">not</span> <span class="n">found</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;</span><span class="se">\n</span><span class="s2">&#34;</span> <span class="o">+</span> <span class="s2">&#34;=&#34;</span><span class="o">*</span><span class="mi">50</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="nb">print</span><span class="p">(</span><span class="s2">&#34;❌ 未找到符合SYC</span><span class="si">{}</span><span class="s2">格式的明文（可能密文/密钥错误，或格式不符）&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="c1"># 输出总耗时</span>
+</span></span><span class="line"><span class="cl">    <span class="n">total_elapsed</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start_time</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;</span><span class="se">\n</span><span class="s2">总耗时：</span><span class="si">{</span><span class="n">total_elapsed</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">秒&#34;</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>结果如下</p>
+<p><img src="/p/geek-week2-rereverse%E7%9A%84wp%E5%8F%8A%E5%AF%B9tea%E5%AE%B6%E6%97%8F%E7%9A%84%E5%AD%A6%E4%B9%A0/flag.png"
+	width="1448"
+	height="224"
+	srcset="/p/geek-week2-rereverse%E7%9A%84wp%E5%8F%8A%E5%AF%B9tea%E5%AE%B6%E6%97%8F%E7%9A%84%E5%AD%A6%E4%B9%A0/flag_hu_c9211a80277c5b80.png 480w, /p/geek-week2-rereverse%E7%9A%84wp%E5%8F%8A%E5%AF%B9tea%E5%AE%B6%E6%97%8F%E7%9A%84%E5%AD%A6%E4%B9%A0/flag_hu_cf3d08ae721ec765.png 1024w"
+	loading="lazy"
+	
+		alt="flag"
+	
+	
+		class="gallery-image" 
+		data-flex-grow="646"
+		data-flex-basis="1551px"
+	
+></p>
+<p>或者也可以观察出密文块的顺序</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">.text:00000000004008BA                 cmp     r9d, 2973BD37h
+</span></span><span class="line"><span class="cl">.text:00000000004008E1                 cmp     r10d, 8662435h
+</span></span><span class="line"><span class="cl">.text:00000000004008ED                 cmp     r11d, 0EEF6889h
+</span></span><span class="line"><span class="cl">.text:00000000004008F9                 cmp     ebx, 0AE421991h
+</span></span><span class="line"><span class="cl">.text:0000000000400902                 cmp     ebp, 0D7B702CFh
+</span></span><span class="line"><span class="cl">.text:000000000040090A                 cmp     r8d, 3B98E6E6h
+</span></span><span class="line"><span class="cl">.text:0000000000400926                 cmp     edx, 352ADCCFh
+</span></span><span class="line"><span class="cl">.text:000000000040092F                 cmp     ecx, 0BFC393ABh
+</span></span><span class="line"><span class="cl">.text:0000000000400938                 cmp     esi, 0B3C20088h
+</span></span><span class="line"><span class="cl">.text:0000000000400942                 cmp     edi, 1BA99AA3h
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>这里可以看出密文是存到寄存器里面的</p>
+<p>现在只要知道寄存器在栈里的顺序就可以知道真正的密文顺序了</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">.text:0000000000400C80 loc_400C80:                             ; CODE XREF: .text:000000000040094A↑j
+</span></span><span class="line"><span class="cl">.text:0000000000400C80                 mov     dword ptr [rsp+0Ch], 0C0FFh
+</span></span><span class="line"><span class="cl">.text:0000000000400C88                 mov     [rsp+2Ch], r14d
+</span></span><span class="line"><span class="cl">.text:0000000000400C8D                 mov     r10d, [rsp+64h]
+</span></span><span class="line"><span class="cl">.text:0000000000400C92                 mov     r11d, [rsp+60h]
+</span></span><span class="line"><span class="cl">.text:0000000000400C97                 mov     dword ptr [rsp+10h], 0DEADh
+</span></span><span class="line"><span class="cl">.text:0000000000400C9F                 mov     ebp, [rsp+5Ch]
+</span></span><span class="line"><span class="cl">.text:0000000000400CA3                 mov     ebx, [rsp+58h]
+</span></span><span class="line"><span class="cl">.text:0000000000400CA7                 mov     r8d, [rsp+54h]
+</span></span><span class="line"><span class="cl">.text:0000000000400CAC                 mov     dword ptr [rsp+14h], 0BEEFh
+</span></span><span class="line"><span class="cl">.text:0000000000400CB4                 mov     edx, [rsp+50h]
+</span></span><span class="line"><span class="cl">.text:0000000000400CB8                 mov     dword ptr [rsp+18h], 5A7Dh
+</span></span><span class="line"><span class="cl">.text:0000000000400CC0                 mov     ecx, [rsp+4Ch]
+</span></span><span class="line"><span class="cl">.text:0000000000400CC4                 mov     dword ptr [rsp+1Ch], 0C0FFh
+</span></span><span class="line"><span class="cl">.text:0000000000400CCC                 mov     esi, [rsp+48h]
+</span></span><span class="line"><span class="cl">.text:0000000000400CD0                 mov     dword ptr [rsp+20h], 0DEADh
+</span></span><span class="line"><span class="cl">.text:0000000000400CD8                 mov     r15d, 0C0FFh
+</span></span><span class="line"><span class="cl">.text:0000000000400CDE                 mov     edi, [rsp+44h]
+</span></span><span class="line"><span class="cl">.text:0000000000400CE2                 mov     dword ptr [rsp+24h], 0BEEFh
+</span></span><span class="line"><span class="cl">.text:0000000000400CEA                 mov     eax, 9E3779B9h
+</span></span><span class="line"><span class="cl">.text:0000000000400CEF                 mov     r9d, [rsp+40h]
+</span></span><span class="line"><span class="cl">.text:0000000000400CF4                 mov     dword ptr [rsp+28h], 5A7Dh
+</span></span><span class="line"><span class="cl">.text:0000000000400CFC                 mov     r14d, 5A7Dh
+</span></span><span class="line"><span class="cl">.text:0000000000400D02                 jnz     short loc_400D53
+</span></span><span class="line"><span class="cl">.text:0000000000400D04                 cmp     rdx, 28h ; &#39;(&#39;
+</span></span><span class="line"><span class="cl">.text:0000000000400D08                 jz      loc_4008B7
+</span></span><span class="line"><span class="cl">.text:0000000000400D0E
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>可知</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">.text:0000000000400CEA                 mov     r9d, [rsp+40h]
+</span></span><span class="line"><span class="cl">.text:0000000000400CDE                 mov     edi, [rsp+44h]
+</span></span><span class="line"><span class="cl">.text:0000000000400CD0                 mov     esi, [rsp+48h]
+</span></span><span class="line"><span class="cl">.text:0000000000400CC4                 mov     ecx, [rsp+4Ch]
+</span></span><span class="line"><span class="cl">.text:0000000000400CB4                 mov     edx, [rsp+50h]
+</span></span><span class="line"><span class="cl">.text:0000000000400CA7                 mov     r8d, [rsp+54h]
+</span></span><span class="line"><span class="cl">.text:0000000000400CA3                 mov     ebx, [rsp+58h]
+</span></span><span class="line"><span class="cl">.text:0000000000400C9F                 mov     ebp, [rsp+5Ch]
+</span></span><span class="line"><span class="cl">.text:0000000000400C92                 mov     r11d, [rsp+60h]
+</span></span><span class="line"><span class="cl">.text:0000000000400C8D                 mov     r10d, [rsp+64h]
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>根据这个就可以直接获得密文，无需遍历</p>
+<p>SYC{sakurakouji_runasama_wa_seikai_ichi}</p>
+
+</section>
+
+
+    <footer class="article-footer">
+    
+
+    </footer>
+
+
+    
+</article>
+
+    
+
+    
+
+     
+    
+        
+    <script src="https://utteranc.es/client.js" 
+        repo="linye9999/linye9999.github.io"
+        issue-term="pathname"
+        
+        crossorigin="anonymous"
+        async
+        >
+</script>
+
+<style>
+    .utterances {
+        max-width: unset;
+    }
+</style>
+
+<script>
+    let utterancesLoaded = false;
+
+    function setUtterancesTheme(theme) {
+        let utterances = document.querySelector('.utterances iframe');
+        if (utterances) {
+            utterances.contentWindow.postMessage(
+                {
+                    type: 'set-theme',
+                    theme: `github-${theme}`
+                },
+                'https://utteranc.es'
+            );
+        }
+    }
+
+    addEventListener('message', event => {
+        if (event.origin !== 'https://utteranc.es') return;
+
+        
+        utterancesLoaded = true;
+        setUtterancesTheme(document.documentElement.dataset.scheme)
+    });
+
+    window.addEventListener('onColorSchemeChange', (e) => {
+        if (!utterancesLoaded) return;
+        setUtterancesTheme(e.detail)
+    })
+</script>
+
+
+    
+
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+        2025 linye
+    </section>
+    
+    <section class="powerby">
+        使用 <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> 构建 <br />
+        主题 <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.32.0">Stack</a></b> 由 <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a> 设计
+    </section>
+</footer>
+
+
+    
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
+                defer
+                >
+            </script><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
+                defer
+                >
+            </script><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
+            ><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
+            >
+
+            </main>
+        </div>
+        <script 
+                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
+                
+                >
+            </script><script type="text/javascript" src="/ts/main.c922af694cc257bf1ecc41c0dd7b0430f9114ec280ccf67cd2c6ad55f5316c4e.js" defer></script>
+<script>
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
+</script>
+
+    </body>
+</html>
