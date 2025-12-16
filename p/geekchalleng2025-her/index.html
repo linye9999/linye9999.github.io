@@ -10,10 +10,10 @@
 <meta property='og:description' content="这题的核心是手动构建一个SEH链，自己触发异常，导致伪代码无法正确查看程序执行流\n1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 .text:00401DBD loc_401DBD: ; CODE XREF: sub_401D30+82↑j .text:00401DBD mov eax, [ebp+var_20] .text:00401DC0 cmp eax, [ebp+var_8] .text:00401DC3 jnb short loc_401E3E .text:00401DC5 mov eax, [ebp+var_20] .text:00401DC8 mov dword_40B1DC, eax .text:00401DCD push offset j_enc3 .text:00401DD2 push large dword ptr fs:0 .text:00401DD9 mov large fs:0, esp .text:00401DE0 push offset j_enc2 .text:00401DE5 push large dword ptr fs:0 .text:00401DEC mov large fs:0, esp .text:00401DF3 push offset j_enc1 .text:00401DF8 push large dword ptr fs:0 .text:00401DFF mov large fs:0, esp .text:00401E06 ud2 这里手动写了一个SEH链，通过ud2这个异常来触发异常处理。\n这里有enc1&ndash;&gt;enc2&ndash;&gt;enc3\n查看enc1的汇编可知\n1 2 3 .text:00401F60 push offset j_enc2 .text:00401F65 push large dword ptr fs:0 .text:00401F6C mov large fs:0, esp 调用enc1之后还会调用enc2\n查看enc2\n1 2 3 .text:004020DD push offset j_enc3 .text:004020E2 push large dword ptr fs:0 .text:004020E9 mov large fs:0, esp 调用enc2之后还会调用enc3\n">
 <meta property='og:url' content='https://linye9999.github.io/p/geekchalleng2025-her/'>
 <meta property='og:site_name' content='linye'>
-<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:published_time' content='2025-12-16T17:28:38&#43;08:00'/><meta property='article:modified_time' content='2025-12-16T17:28:38&#43;08:00'/><meta property='og:image' content='https://linye9999.github.io/p/geekchalleng2025-her/cover.png' />
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:published_time' content='2025-12-16T17:28:38&#43;08:00'/><meta property='article:modified_time' content='2025-12-16T17:28:38&#43;08:00'/><meta property='og:image' content='https://linye9999.github.io/p/geekchalleng2025-her/cover.jpg' />
 <meta name="twitter:title" content="Geekchalleng2025 Her">
 <meta name="twitter:description" content="这题的核心是手动构建一个SEH链，自己触发异常，导致伪代码无法正确查看程序执行流\n1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 .text:00401DBD loc_401DBD: ; CODE XREF: sub_401D30+82↑j .text:00401DBD mov eax, [ebp+var_20] .text:00401DC0 cmp eax, [ebp+var_8] .text:00401DC3 jnb short loc_401E3E .text:00401DC5 mov eax, [ebp+var_20] .text:00401DC8 mov dword_40B1DC, eax .text:00401DCD push offset j_enc3 .text:00401DD2 push large dword ptr fs:0 .text:00401DD9 mov large fs:0, esp .text:00401DE0 push offset j_enc2 .text:00401DE5 push large dword ptr fs:0 .text:00401DEC mov large fs:0, esp .text:00401DF3 push offset j_enc1 .text:00401DF8 push large dword ptr fs:0 .text:00401DFF mov large fs:0, esp .text:00401E06 ud2 这里手动写了一个SEH链，通过ud2这个异常来触发异常处理。\n这里有enc1&ndash;&gt;enc2&ndash;&gt;enc3\n查看enc1的汇编可知\n1 2 3 .text:00401F60 push offset j_enc2 .text:00401F65 push large dword ptr fs:0 .text:00401F6C mov large fs:0, esp 调用enc1之后还会调用enc2\n查看enc2\n1 2 3 .text:004020DD push offset j_enc3 .text:004020E2 push large dword ptr fs:0 .text:004020E9 mov large fs:0, esp 调用enc2之后还会调用enc3\n"><meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:image" content='https://linye9999.github.io/p/geekchalleng2025-her/cover.png' />
+    <meta name="twitter:image" content='https://linye9999.github.io/p/geekchalleng2025-her/cover.jpg' />
     <link rel="shortcut icon" href="/favicon.ico" />
 
     </head>
@@ -278,10 +278,10 @@
     <header class="article-header">
         <div class="article-image">
             <a href="/p/geekchalleng2025-her/">
-                <img src="/p/geekchalleng2025-her/cover_hu_8160d6a4f2197ea1.png"
-                        srcset="/p/geekchalleng2025-her/cover_hu_8160d6a4f2197ea1.png 800w, /p/geekchalleng2025-her/cover_hu_b65c0937a707e352.png 1600w"
+                <img src="/p/geekchalleng2025-her/cover_hu_343219398e757b4.jpg"
+                        srcset="/p/geekchalleng2025-her/cover_hu_343219398e757b4.jpg 800w, /p/geekchalleng2025-her/cover_hu_b34cba4973df405a.jpg 1600w"
                         width="800" 
-                        height="467" 
+                        height="452" 
                         loading="lazy"
                         alt="Featured image of post Geekchalleng2025 Her" />
                 
