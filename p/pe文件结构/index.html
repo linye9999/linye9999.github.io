@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="zh-cn" dir="ltr">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content=" DOS头 e_magic：最开头的两个字节4D5A是DOS签名，不可改 e_lfanew：最后四个字节，小端序，所以80指向PE头的偏移，也就是开始位置 NT头 1 2 3 4 5 typedef struct _IMAGE_NT_HEADERS { DWORD Signature; // 50 45 PE标识 IMAGE_FILE_HEADER FileHeader; // 标准PE头 IMAGE_OPTIONAL_HEADER32 OptionalHeader; ``// 扩展PE头 } IMAGE_NT_HEADERS32, *PIMAGE_NT_HEADERS32; Signature(4字节)\nPE标识不可改 50 45\n标准PE头 IMAGE_FILE_HEADER(20字节)\n1 2 3 4 5 6 7 8 9 typedef struct _IMAGE_FILE_HEADER { WORD Machine; // 可以运行在什么样的CPU上 WORD NumberOfSections; // 表示节的数量 DWORD TimeDateStamp; // 编译器填写的时间戳 DWORD PointerToSymbolTable; // 调试相关 DWORD NumberOfSymbols; // 调试相关 WORD SizeOfOptionalHeader; // 扩展PE头的大小，32位E0，64位F0 WORD Characteristics; // 文件属性，每个二进制位代表不同信息 } IMAGE_FILE_HEADER, *PIMAGE_FILE_HEADER; 文件属性\n扩展PE头 IMAGE_OPTIONAL_HEADER\n">
+<title>PE文件结构</title>
+
+<link rel='canonical' href='https://linye9999.github.io/p/pe%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84/'>
+
+<link rel="stylesheet" href="/scss/style.min.b0e76e98cdd4f7082d1fc36f7af7e0843a81201db2197c03ca426751dc923735.css"><meta property='og:title' content="PE文件结构">
+<meta property='og:description' content=" DOS头 e_magic：最开头的两个字节4D5A是DOS签名，不可改 e_lfanew：最后四个字节，小端序，所以80指向PE头的偏移，也就是开始位置 NT头 1 2 3 4 5 typedef struct _IMAGE_NT_HEADERS { DWORD Signature; // 50 45 PE标识 IMAGE_FILE_HEADER FileHeader; // 标准PE头 IMAGE_OPTIONAL_HEADER32 OptionalHeader; ``// 扩展PE头 } IMAGE_NT_HEADERS32, *PIMAGE_NT_HEADERS32; Signature(4字节)\nPE标识不可改 50 45\n标准PE头 IMAGE_FILE_HEADER(20字节)\n1 2 3 4 5 6 7 8 9 typedef struct _IMAGE_FILE_HEADER { WORD Machine; // 可以运行在什么样的CPU上 WORD NumberOfSections; // 表示节的数量 DWORD TimeDateStamp; // 编译器填写的时间戳 DWORD PointerToSymbolTable; // 调试相关 DWORD NumberOfSymbols; // 调试相关 WORD SizeOfOptionalHeader; // 扩展PE头的大小，32位E0，64位F0 WORD Characteristics; // 文件属性，每个二进制位代表不同信息 } IMAGE_FILE_HEADER, *PIMAGE_FILE_HEADER; 文件属性\n扩展PE头 IMAGE_OPTIONAL_HEADER\n">
+<meta property='og:url' content='https://linye9999.github.io/p/pe%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84/'>
+<meta property='og:site_name' content='linye'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:published_time' content='2025-12-18T20:02:12&#43;08:00'/><meta property='article:modified_time' content='2025-12-18T20:02:12&#43;08:00'/><meta property='og:image' content='https://linye9999.github.io/p/pe%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84/cover.jpg' />
+<meta name="twitter:title" content="PE文件结构">
+<meta name="twitter:description" content=" DOS头 e_magic：最开头的两个字节4D5A是DOS签名，不可改 e_lfanew：最后四个字节，小端序，所以80指向PE头的偏移，也就是开始位置 NT头 1 2 3 4 5 typedef struct _IMAGE_NT_HEADERS { DWORD Signature; // 50 45 PE标识 IMAGE_FILE_HEADER FileHeader; // 标准PE头 IMAGE_OPTIONAL_HEADER32 OptionalHeader; ``// 扩展PE头 } IMAGE_NT_HEADERS32, *PIMAGE_NT_HEADERS32; Signature(4字节)\nPE标识不可改 50 45\n标准PE头 IMAGE_FILE_HEADER(20字节)\n1 2 3 4 5 6 7 8 9 typedef struct _IMAGE_FILE_HEADER { WORD Machine; // 可以运行在什么样的CPU上 WORD NumberOfSections; // 表示节的数量 DWORD TimeDateStamp; // 编译器填写的时间戳 DWORD PointerToSymbolTable; // 调试相关 DWORD NumberOfSymbols; // 调试相关 WORD SizeOfOptionalHeader; // 扩展PE头的大小，32位E0，64位F0 WORD Characteristics; // 文件属性，每个二进制位代表不同信息 } IMAGE_FILE_HEADER, *PIMAGE_FILE_HEADER; 文件属性\n扩展PE头 IMAGE_OPTIONAL_HEADER\n"><meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content='https://linye9999.github.io/p/pe%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84/cover.jpg' />
+    <link rel="shortcut icon" href="/favicon.ico" />
+
+    </head>
+    <body class="
+    article-page
+    ">
+    <script>
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
+
+            document.documentElement.dataset.scheme = 'dark';
+        } else {
+            document.documentElement.dataset.scheme = 'light';
+        }
+    })();
+</script>
+<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="切换菜单">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
+
+    <header>
+        
+            
+            <figure class="site-avatar">
+                <a href="/">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/avatar_hu_381de9de90108543.png" width="300"
+                            height="300" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+                </a>
+                
+                    <span class="emoji">🍥</span>
+                
+            </figure>
+            
+        
+        
+        <div class="site-meta">
+            <h1 class="site-name"><a href="/">linye</a></h1>
+            <h2 class="site-description">欢迎来到我的博客这里啥都没有，还有linye是绫夜</h2>
+        </div>
+    </header><ol class="menu-social">
+            
+                <li>
+                    <a 
+                        href='https://github.com/CaiJimmy/hugo-theme-stack'
+                        target="_blank"
+                        title="GitHub"
+                        rel="me"
+                    >
+                        
+                        
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-github" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+  <path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5" />
+</svg>
+
+
+
+                        
+                    </a>
+                </li>
+            
+                <li>
+                    <a 
+                        href='https://twitter.com'
+                        target="_blank"
+                        title="Twitter"
+                        rel="me"
+                    >
+                        
+                        
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-twitter" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+  <path d="M22 4.01c-1 .49 -1.98 .689 -3 .99c-1.121 -1.265 -2.783 -1.335 -4.38 -.737s-2.643 2.06 -2.62 3.737v1c-3.245 .083 -6.135 -1.395 -8 -4c0 0 -4.182 7.433 4 11c-1.872 1.247 -3.739 2.088 -6 2c3.308 1.803 6.913 2.423 10.034 1.517c3.58 -1.04 6.522 -3.723 7.651 -7.742a13.84 13.84 0 0 0 .497 -3.753c-.002 -.249 1.51 -2.772 1.818 -4.013z" />
+</svg>
+
+
+
+                        
+                    </a>
+                </li>
+            
+        </ol><ol class="menu" id="main-menu">
+        
+        
+        
+        <li >
+            <a href='/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-home" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <polyline points="5 12 3 12 12 3 21 12 19 12" />
+  <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
+  <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
+</svg>
+
+
+
+                
+                <span>主页</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/%E5%85%B3%E4%BA%8E/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="7" r="4" />
+  <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+</svg>
+
+
+
+                
+                <span>关于</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/archives/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-archive" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <rect x="3" y="4" width="18" height="4" rx="2" />
+  <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" />
+  <line x1="10" y1="12" x2="14" y2="12" />
+</svg>
+
+
+
+                
+                <span>归档</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/search/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-search" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="10" cy="10" r="7" />
+  <line x1="21" y1="21" x2="15" y2="15" />
+</svg>
+
+
+
+                
+                <span>搜索</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/%E5%8F%8B%E6%83%85%E9%93%BE%E6%8E%A5/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-link" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M10 14a3.5 3.5 0 0 0 5 0l4 -4a3.5 3.5 0 0 0 -5 -5l-.5 .5" />
+  <path d="M14 10a3.5 3.5 0 0 0 -5 0l-4 4a3.5 3.5 0 0 0 5 5l.5 -.5" />
+</svg>
+
+
+
+                
+                <span>友情链接</span>
+            </a>
+        </li>
+        
+        <li class="menu-bottom-section">
+            <ol class="menu">
+                    
+                        <li id="i18n-switch">  
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-language" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+  <path d="M4 5h7" />
+  <path d="M9 3v2c0 4.418 -2.239 8 -5 8" />
+  <path d="M5 9c-.003 2.144 2.952 3.908 6.7 4" />
+  <path d="M12 20l4 -9l4 9" />
+  <path d="M19.1 18h-6.2" />
+</svg>
+
+
+
+                            <select name="language" title="language" onchange="window.location.href = this.selectedOptions[0].value">
+                                
+                                    <option value="https://linye9999.github.io/en/" >English</option>
+                                
+                                    <option value="https://linye9999.github.io/" selected>简体中文</option>
+                                
+                                    <option value="https://linye9999.github.io/ar/" >عربي</option>
+                                
+                            </select>
+                        </li>
+                    
+                
+
+                
+                    <li id="dark-mode-toggle">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                        <span>暗色模式</span>
+                    </li>
+                
+            </ol>
+        </li>
+    </ol>
+</aside>
+
+    <aside class="sidebar right-sidebar sticky">
+        
+            
+                
+    <section class="widget archives">
+        <div class="widget-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <line x1="5" y1="9" x2="19" y2="9" />
+  <line x1="5" y1="15" x2="19" y2="15" />
+  <line x1="11" y1="4" x2="7" y2="20" />
+  <line x1="17" y1="4" x2="13" y2="20" />
+</svg>
+
+
+
+        </div>
+        <h2 class="widget-title section-title">目录</h2>
+        
+        <div class="widget--toc">
+            <nav id="TableOfContents">
+  <ol>
+    <li><a href="#dos头"><strong>DOS头</strong></a></li>
+    <li><a href="#nt头"><strong>NT头</strong></a></li>
+  </ol>
+</nav>
+        </div>
+    </section>
+
+            
+        
+    </aside>
+
+
+            <main class="main full-width">
+    <article class="has-image main-article">
+    <header class="article-header">
+        <div class="article-image">
+            <a href="/p/pe%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84/">
+                <img src="/p/pe%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84/cover_hu_9ab276d0f10844.jpg"
+                        srcset="/p/pe%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84/cover_hu_9ab276d0f10844.jpg 800w, /p/pe%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84/cover_hu_82b56fd9788072b9.jpg 1600w"
+                        width="800" 
+                        height="1067" 
+                        loading="lazy"
+                        alt="Featured image of post PE文件结构" />
+                
+            </a>
+        </div>
+    
+
+    <div class="article-details">
+    
+
+    <div class="article-title-wrapper">
+        <h2 class="article-title">
+            <a href="/p/pe%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84/">PE文件结构</a>
+        </h2>
+    
+        
+    </div>
+
+    
+    
+    
+    
+    <footer class="article-time">
+        
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
+  <circle cx="18" cy="18" r="4" />
+  <path d="M15 3v4" />
+  <path d="M7 3v4" />
+  <path d="M3 11h16" />
+  <path d="M18 16.496v1.504l1 1" />
+</svg>
+                <time class="article-time--published" datetime='2025-12-18T20:02:12&#43;08:00'>Dec 18, 2025</time>
+            </div>
+        
+
+        
+    </footer>
+    
+
+    
+</div>
+
+</header>
+
+    <section class="article-content">
+    
+    
+    <ul>
+<li>
+<h2 id="dos头"><strong>DOS头</strong>
+</h2><ul>
+<li><strong>e_magic</strong>：最开头的两个字节4D5A是DOS签名，不可改</li>
+<li><strong>e_lfanew</strong>：最后四个字节，小端序，所以80指向PE头的偏移，也就是开始位置</li>
+</ul>
+</li>
+</ul>
+<p><img src="/p/pe%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84/DOS%E5%A4%B4bin.png"
+	width="715"
+	height="302"
+	srcset="/p/pe%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84/DOS%E5%A4%B4bin_hu_a714411bd3d7af9f.png 480w, /p/pe%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84/DOS%E5%A4%B4bin_hu_fecd70c6deb33acf.png 1024w"
+	loading="lazy"
+	
+		alt="DOS头bin"
+	
+	
+		class="gallery-image" 
+		data-flex-grow="236"
+		data-flex-basis="568px"
+	
+></p>
+<ul>
+<li>
+<h2 id="nt头"><strong>NT头</strong>
+</h2><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">typedef</span> <span class="k">struct</span> <span class="n">_IMAGE_NT_HEADERS</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl"> <span class="n">DWORD</span> <span class="n">Signature</span><span class="p">;</span>  <span class="c1">// 50 45 PE标识
+</span></span></span><span class="line"><span class="cl"> <span class="n">IMAGE_FILE_HEADER</span> <span class="n">FileHeader</span><span class="p">;</span> <span class="c1">// 标准PE头
+</span></span></span><span class="line"><span class="cl"> <span class="n">IMAGE_OPTIONAL_HEADER32</span> <span class="n">OptionalHeader</span><span class="p">;</span> <span class="err">``</span><span class="c1">// 扩展PE头
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span> <span class="n">IMAGE_NT_HEADERS32</span><span class="p">,</span> <span class="o">*</span><span class="n">PIMAGE_NT_HEADERS32</span><span class="p">;</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><ul>
+<li>
+<p><strong>Signature(4字节)</strong></p>
+<p>PE标识不可改 50 45</p>
+</li>
+<li>
+<p><strong>标准PE头 IMAGE_FILE_HEADER(20字节)</strong></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span><span class="lnt">9
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">typedef</span> <span class="k">struct</span> <span class="n">_IMAGE_FILE_HEADER</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl"> <span class="n">WORD</span> <span class="n">Machine</span><span class="p">;</span> <span class="c1">// 可以运行在什么样的CPU上
+</span></span></span><span class="line"><span class="cl"> <span class="n">WORD</span> <span class="n">NumberOfSections</span><span class="p">;</span> <span class="c1">// 表示节的数量
+</span></span></span><span class="line"><span class="cl"> <span class="n">DWORD</span> <span class="n">TimeDateStamp</span><span class="p">;</span> <span class="c1">// 编译器填写的时间戳
+</span></span></span><span class="line"><span class="cl"> <span class="n">DWORD</span> <span class="n">PointerToSymbolTable</span><span class="p">;</span> <span class="c1">// 调试相关
+</span></span></span><span class="line"><span class="cl"> <span class="n">DWORD</span> <span class="n">NumberOfSymbols</span><span class="p">;</span> <span class="c1">// 调试相关
+</span></span></span><span class="line"><span class="cl"> <span class="n">WORD</span> <span class="n">SizeOfOptionalHeader</span><span class="p">;</span> <span class="c1">// 扩展PE头的大小，32位E0，64位F0
+</span></span></span><span class="line"><span class="cl"> <span class="n">WORD</span> <span class="n">Characteristics</span><span class="p">;</span> <span class="c1">// 文件属性，每个二进制位代表不同信息
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span> <span class="n">IMAGE_FILE_HEADER</span><span class="p">,</span> <span class="o">*</span><span class="n">PIMAGE_FILE_HEADER</span><span class="p">;</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>文件属性</p>
+<p><img src="/p/pe%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84/%E6%96%87%E4%BB%B6%E5%B1%9E%E6%80%A7.png"
+	width="1413"
+	height="754"
+	srcset="/p/pe%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84/%E6%96%87%E4%BB%B6%E5%B1%9E%E6%80%A7_hu_82579fdee9c77560.png 480w, /p/pe%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84/%E6%96%87%E4%BB%B6%E5%B1%9E%E6%80%A7_hu_15dce00ea8801bad.png 1024w"
+	loading="lazy"
+	
+		alt="文件属性"
+	
+	
+		class="gallery-image" 
+		data-flex-grow="187"
+		data-flex-basis="449px"
+	
+></p>
+</li>
+<li>
+<p><strong>扩展PE头 IMAGE_OPTIONAL_HEADER</strong></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="c1">//32位为例
+</span></span></span><span class="line"><span class="cl"><span class="k">typedef</span> <span class="k">struct</span> <span class="n">_IMAGE_OPTIONAL_HEADER32</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">WORD</span>    <span class="n">Magic</span><span class="p">;</span>                  <span class="c1">// 标志：PE32 是 0x10B
+</span></span></span><span class="line"><span class="cl">    <span class="n">BYTE</span>    <span class="n">MajorLinkerVersion</span><span class="p">;</span>     <span class="c1">// 链接器的主版本号
+</span></span></span><span class="line"><span class="cl">    <span class="n">BYTE</span>    <span class="n">MinorLinkerVersion</span><span class="p">;</span>     <span class="c1">// 链接器的次版本号
+</span></span></span><span class="line"><span class="cl">    <span class="n">DWORD</span>   <span class="n">SizeOfCode</span><span class="p">;</span>             <span class="c1">// 代码段的大小（没用）
+</span></span></span><span class="line"><span class="cl">    <span class="n">DWORD</span>   <span class="n">SizeOfInitializedData</span><span class="p">;</span>  <span class="c1">// 初始化数据段的大小（没用）
+</span></span></span><span class="line"><span class="cl">    <span class="n">DWORD</span>   <span class="n">SizeOfUninitializedData</span><span class="p">;</span><span class="c1">// 未初始化数据段的大小（没用）
+</span></span></span><span class="line"><span class="cl">    <span class="n">DWORD</span>   <span class="n">AddressOfEntryPoint</span><span class="p">;</span>    <span class="c1">// 程序入口点的 RVA
+</span></span></span><span class="line"><span class="cl">    <span class="n">DWORD</span>   <span class="n">BaseOfCode</span><span class="p">;</span>             <span class="c1">// 代码段的起始 RVA（没用）
+</span></span></span><span class="line"><span class="cl">    <span class="n">DWORD</span>   <span class="n">BaseOfData</span><span class="p">;</span>             <span class="c1">// 数据段的起始 RVA（没用）
+</span></span></span><span class="line"><span class="cl">    <span class="n">DWORD</span>   <span class="n">ImageBase</span><span class="p">;</span>              <span class="c1">// 内存镜像基址
+</span></span></span><span class="line"><span class="cl">    <span class="n">DWORD</span>   <span class="n">SectionAlignment</span><span class="p">;</span>       <span class="c1">// 内存对齐
+</span></span></span><span class="line"><span class="cl">    <span class="n">DWORD</span>   <span class="n">FileAlignment</span><span class="p">;</span>          <span class="c1">// 文件对齐
+</span></span></span><span class="line"><span class="cl">    <span class="n">WORD</span>    <span class="n">MajorOperatingSystemVersion</span><span class="p">;</span> <span class="c1">// OS 主版本号
+</span></span></span><span class="line"><span class="cl">    <span class="n">WORD</span>    <span class="n">MinorOperatingSystemVersion</span><span class="p">;</span> <span class="c1">// OS 次版本号
+</span></span></span><span class="line"><span class="cl">    <span class="n">DWORD</span>   <span class="n">SizeOfImage</span><span class="p">;</span>            <span class="c1">// 镜像的总大小
+</span></span></span><span class="line"><span class="cl">    <span class="n">DWORD</span>   <span class="n">SizeOfHeaders</span><span class="p">;</span>          <span class="c1">// 头+节表按照文件对齐后的总大小
+</span></span></span><span class="line"><span class="cl">    <span class="n">DWORD</span>   <span class="n">CheckSum</span><span class="p">;</span>               <span class="c1">// 校验和
+</span></span></span><span class="line"><span class="cl">    <span class="n">WORD</span>    <span class="n">Subsystem</span><span class="p">;</span>              <span class="c1">// 子系统（如 GUI、CUI）
+</span></span></span><span class="line"><span class="cl">    <span class="n">WORD</span>    <span class="n">DllCharacteristics</span><span class="p">;</span>    <span class="c1">// DLL 属性
+</span></span></span><span class="line"><span class="cl">    <span class="n">DWORD</span>   <span class="n">SizeOfStackReserve</span><span class="p">;</span>     <span class="c1">// 堆栈保留大小
+</span></span></span><span class="line"><span class="cl">    <span class="n">DWORD</span>   <span class="n">SizeOfStackCommit</span><span class="p">;</span>      <span class="c1">// 堆栈提交大小
+</span></span></span><span class="line"><span class="cl">    <span class="n">DWORD</span>   <span class="n">SizeOfHeapReserve</span><span class="p">;</span>      <span class="c1">// 堆保留大小
+</span></span></span><span class="line"><span class="cl">    <span class="n">DWORD</span>   <span class="n">SizeOfHeapCommit</span><span class="p">;</span>       <span class="c1">// 堆提交大小
+</span></span></span><span class="line"><span class="cl">    <span class="n">DWORD</span>   <span class="n">LoaderFlags</span><span class="p">;</span>            <span class="c1">// 装载器标志（通常为 0）
+</span></span></span><span class="line"><span class="cl">    <span class="n">DWORD</span>   <span class="n">NumberOfRvaAndSizes</span><span class="p">;</span>    <span class="c1">// 数据目录项数
+</span></span></span><span class="line"><span class="cl">    <span class="n">IMAGE_DATA_DIRECTORY</span> <span class="n">DataDirectory</span><span class="p">[</span><span class="mi">16</span><span class="p">];</span> <span class="c1">// 表，结构体数组
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span> <span class="n">IMAGE_OPTIONAL_HEADER32</span><span class="p">;</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><ul>
+<li>
+<p>重要字段</p>
+<p><strong>WORD    Magic;</strong>  32位程序：10B；64位程序：20B</p>
+<p><strong>DWORD   AddressOfEntryPoint;</strong>  程序入口  相对于加载到内存后起始地址的偏移，需要与ImageBase配合使用</p>
+<pre><code>  		**DWORD   ImageBase; **   内存镜像基址
+
+  		**WORD    DllCharacteristics;**  里可以选择是否为动态基址 
+</code></pre>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>​					 **DWORD   SectionAlignment; **   内存对齐</p>
+<p>​					 <strong>DWORD   FileAlignment;</strong>     文件对齐</p>
+<p>​					 <strong>DWORD   SizeOfImage;</strong>   文件在内存中的大小，按SectionAlignment对齐后的大小</p>
+<p>​					 <strong>DWORD   SizeOfHeaders;</strong>  DOS头+NT头+标准PE头+可选PE头+区段头，按FileAlignment对齐后的大小</p>
+<p>​					**DWORD   CheckSum;**表示校验和，是用来判断文件是否被修改的，它的计算方法就是文件的两个字节与两个字节相加，最终的值（不考虑溢出情况）就是校验和。</p>
+<p>​					<strong>DWORD   NumberOfRvaAndSizes;</strong>    数据目录项数</p>
+<p>​					<strong>IMAGE_DATA_DIRECTORY DataDirectory (数据⽬录)</strong>   指向数据⽬录中第⼀个 IMAGE_DATA_DIRECTORY 结构的指针。每个条⽬包含地址（RVA）和⼤⼩</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">typedef</span> <span class="k">struct</span> <span class="n">_IMAGE_DATA_DIRECTORY</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="n">DWORD</span> <span class="n">VirtualAddresss</span><span class="p">;</span>   <span class="c1">//内存中的偏移
+</span></span></span><span class="line"><span class="cl">    <span class="n">DWORD</span> <span class="n">Size</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span> <span class="n">IMAGE_DATA_DIRECTORY</span><span class="p">,</span> <span class="o">*</span><span class="n">PIMAGE_DATA_DIRECTORY</span><span class="p">;</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><img src="/p/pe%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84/%E6%95%B0%E6%8D%AE%E7%9B%AE%E5%BD%95.png"
+	width="918"
+	height="737"
+	srcset="/p/pe%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84/%E6%95%B0%E6%8D%AE%E7%9B%AE%E5%BD%95_hu_ab86f28a9fae5a8a.png 480w, /p/pe%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84/%E6%95%B0%E6%8D%AE%E7%9B%AE%E5%BD%95_hu_c46914fc21524798.png 1024w"
+	loading="lazy"
+	
+		alt="数据目录"
+	
+	
+		class="gallery-image" 
+		data-flex-grow="124"
+		data-flex-basis="298px"
+	
+></p>
+<ul>
+<li>
+<p><strong>RVA和FOA转换</strong> RVA-对应区段RVA=FOA-对应区段的FOA</p>
+</li>
+<li>
+<p><strong>节表</strong></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">typedef</span> <span class="k">struct</span> <span class="n">_IMAGE_SECTION_HEADER</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">BYTE</span>    <span class="n">Name</span><span class="p">[</span><span class="mi">8</span><span class="p">];</span>               <span class="c1">// 节名称（最多 8 字节，可能没有结束符）
+</span></span></span><span class="line"><span class="cl">    <span class="k">union</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">DWORD</span>   <span class="n">PhysicalAddress</span><span class="p">;</span>   <span class="c1">// 实际已弃用，常为 0
+</span></span></span><span class="line"><span class="cl">        <span class="n">DWORD</span>   <span class="n">VirtualSize</span><span class="p">;</span>       <span class="c1">// 节的实际大小（内存中的大小）
+</span></span></span><span class="line"><span class="cl">    <span class="p">}</span> <span class="n">Misc</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">DWORD</span>   <span class="n">VirtualAddress</span><span class="p">;</span>        <span class="c1">// 节在内存中的 RVA（相对虚拟地址）
+</span></span></span><span class="line"><span class="cl">    <span class="n">DWORD</span>   <span class="n">SizeOfRawData</span><span class="p">;</span>         <span class="c1">// 节在文件中的大小（以 FileAlignment 对齐）
+</span></span></span><span class="line"><span class="cl">    <span class="n">DWORD</span>   <span class="n">PointerToRawData</span><span class="p">;</span>      <span class="c1">// 节在文件中的偏移（以 FileAlignment 对齐）
+</span></span></span><span class="line"><span class="cl">    <span class="n">DWORD</span>   <span class="n">PointerToRelocations</span><span class="p">;</span> <span class="c1">// 重定位表的文件偏移（通常为 0，已弃用）
+</span></span></span><span class="line"><span class="cl">    <span class="n">DWORD</span>   <span class="n">PointerToLinenumbers</span><span class="p">;</span> <span class="c1">// 调试信息的文件偏移（通常为 0）
+</span></span></span><span class="line"><span class="cl">    <span class="n">WORD</span>    <span class="n">NumberOfRelocations</span><span class="p">;</span>  <span class="c1">// 重定位条目数量（通常为 0）
+</span></span></span><span class="line"><span class="cl">    <span class="n">WORD</span>    <span class="n">NumberOfLinenumbers</span><span class="p">;</span>  <span class="c1">// 调试行号条目数量（通常为 0）
+</span></span></span><span class="line"><span class="cl">    <span class="n">DWORD</span>   <span class="n">Characteristics</span><span class="p">;</span>      <span class="c1">// 节的属性标志（权限、类型等）
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span> <span class="n">IMAGE_SECTION_HEADER</span><span class="p">;</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><strong>DWORD   VirtualAddress;</strong>   节在<strong>内存</strong>中的偏移位置</p>
+<p><strong>DWORD   PointerToRawData;</strong>    节在<strong>文件</strong>中的<strong>偏移</strong></p>
+</li>
+<li>
+<p><strong>空白添加代码</strong></p>
+</li>
+<li>
+<p><strong>扩大节</strong></p>
+<ul>
+<li>
+<p>分配一块新的空间，大小为S</p>
+</li>
+<li>
+<p>将最后一个节的SizeOfRawData和VirtualSize改为N</p>
+<p>N=max(SizeOfRawData,VirtualSize)+S</p>
+</li>
+<li>
+<p>修改SizeOfImage</p>
+</li>
+<li>
+<p>修改节的属性使它可执行</p>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>新增节的步骤</strong></p>
+<ul>
+<li>判断是否有足够的空间，可以添加一个节表</li>
+<li>在节表中新增一个成员</li>
+<li>修改PE头中节的数量</li>
+<li>修改SizeOfimage的大小</li>
+<li>在原有数据的最后，新增一个节的数据（内存对齐的整数倍）</li>
+<li>修正新增节表的属性</li>
+</ul>
+</li>
+<li>
+<p><strong>导出表</strong>，先拿到可选PE头，看最后一个字段数据目录表的第0项，存放导出表的偏移</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-C" data-lang="C"><span class="line"><span class="cl"><span class="k">typedef</span> <span class="k">struct</span> <span class="n">_IMAGE_DATA_DIRECTORY</span><span class="p">{</span>    
+</span></span><span class="line"><span class="cl">    <span class="n">DWORD</span> <span class="n">VirtualAddresss</span><span class="p">;</span>   <span class="c1">//内存中的偏移   
+</span></span></span><span class="line"><span class="cl">    <span class="n">DWORD</span> <span class="n">Size</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span><span class="n">IMAGE_DATA_DIRECTORY</span><span class="p">,</span> <span class="o">*</span><span class="n">PIMAGE_DATA_DIRECTORY</span><span class="p">;</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><ul>
+<li>
+<p><strong>导出表结构体</strong></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">typedef</span> <span class="k">struct</span> <span class="n">_IMAGE_EXPORT_DIRECTORY</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">DWORD</span>   <span class="n">Characteristics</span><span class="p">;</span>       <span class="c1">// 保留,恒为0x00000000（没有）
+</span></span></span><span class="line"><span class="cl">    <span class="n">DWORD</span>   <span class="n">TimeDateStamp</span><span class="p">;</span>         <span class="c1">// 文件的产生时间戳（没有）
+</span></span></span><span class="line"><span class="cl">    <span class="n">WORD</span>    <span class="n">MajorVersion</span><span class="p">;</span>          <span class="c1">// 主版本号（没有）
+</span></span></span><span class="line"><span class="cl">    <span class="n">WORD</span>    <span class="n">MinorVersion</span><span class="p">;</span>          <span class="c1">// 次版本号（没有）
+</span></span></span><span class="line"><span class="cl">    <span class="n">DWORD</span>   <span class="n">Name</span><span class="p">;</span>                  <span class="c1">// 指向导出表文件名的RVA
+</span></span></span><span class="line"><span class="cl">    <span class="n">DWORD</span>   <span class="n">Base</span><span class="p">;</span>                  <span class="c1">// 导出函数的起始序号
+</span></span></span><span class="line"><span class="cl">    <span class="n">DWORD</span>   <span class="n">NumberOfFunctions</span><span class="p">;</span>     <span class="c1">// 导出函数总数(最大序号-最小序号+1)
+</span></span></span><span class="line"><span class="cl">    <span class="n">DWORD</span>   <span class="n">NumberOfNames</span><span class="p">;</span>         <span class="c1">// 以名称导
+</span></span></span><span class="line"><span class="cl">    <span class="err">出函数的总数</span>
+</span></span><span class="line"><span class="cl">    <span class="n">DWORD</span>   <span class="n">AddressOfFunctions</span><span class="p">;</span>    <span class="c1">// 导出函数地址表的RVA
+</span></span></span><span class="line"><span class="cl">    <span class="n">DWORD</span>   <span class="n">AddressOfNames</span><span class="p">;</span>        <span class="c1">// 函数名称地址表的RVA
+</span></span></span><span class="line"><span class="cl">    <span class="n">DWORD</span>   <span class="n">AddressOfNameOrdinals</span><span class="p">;</span> <span class="c1">// 函数名序号表的RVA
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span> <span class="n">IMAGE_EXPORT_DIRECTORY</span><span class="p">,</span> <span class="o">*</span><span class="n">PIMAGE_EXPORT_DIRECTORY</span><span class="p">;</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><strong>AddressOfFunctions，AddressOfNames，AddressOfNameOrdinals</strong></p>
+<p><img src="/p/pe%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84/%E5%87%BD%E6%95%B0%E5%BA%8F%E5%8F%B7%E8%A1%A8-%E5%87%BD%E6%95%B0%E5%90%8D%E7%A7%B0%E8%A1%A8-%E5%87%BD%E6%95%B0%E5%9C%B0%E5%9D%80%E8%A1%A8.jpg"
+	width="869"
+	height="521"
+	srcset="/p/pe%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84/%E5%87%BD%E6%95%B0%E5%BA%8F%E5%8F%B7%E8%A1%A8-%E5%87%BD%E6%95%B0%E5%90%8D%E7%A7%B0%E8%A1%A8-%E5%87%BD%E6%95%B0%E5%9C%B0%E5%9D%80%E8%A1%A8_hu_e8a9dff54b3f1ceb.jpg 480w, /p/pe%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84/%E5%87%BD%E6%95%B0%E5%BA%8F%E5%8F%B7%E8%A1%A8-%E5%87%BD%E6%95%B0%E5%90%8D%E7%A7%B0%E8%A1%A8-%E5%87%BD%E6%95%B0%E5%9C%B0%E5%9D%80%E8%A1%A8_hu_41a2ecf4a31b6b8a.jpg 1024w"
+	loading="lazy"
+	
+		alt="函数序号表-函数名称表-函数地址表"
+	
+	
+		class="gallery-image" 
+		data-flex-grow="166"
+		data-flex-basis="400px"
+	
+></p>
+<p>已知名称，可从AddressOfNames获得相应索引，再通过该索引在AddressOfNameOrdinals找到函数偏移地址在AddressOfFunctions表中的索引。</p>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>导入表</strong></p>
+<ul>
+<li>
+<p>前置知识</p>
+<ul>
+<li>
+<p>调用dll文件的原理</p>
+<p>程序在调用dll文件函数时，并不是把dll文件函数的代码编译到当前文件中，而是把dll文件对应的函数地址保存到了当前文件中</p>
+<p>在文件中，对应的函数地址部分存储的时<strong>函数名称</strong></p>
+</li>
+<li>
+<p>一个进程空间中exe dll文件如何被加载到内存</p>
+</li>
+<li>
+<p>exe文件调用的动调链接库在内存中和硬盘中有什么不同</p>
+</li>
+</ul>
+</li>
+<li>
+<p>扩展PE头中数据目录存储的是第一个导入表的偏移，导入表有很多张，20个字节是一个，以20个0为结束</p>
+</li>
+<li>
+<p>导入表结构体</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">typedef</span> <span class="k">struct</span> <span class="n">_IMAGE_IMPORT_DESCRIPTOR</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">union</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="n">DWORD</span> <span class="n">Characteristics</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">		<span class="n">DWORD</span> <span class="n">OriginalFirstThunk</span><span class="p">;</span> <span class="c1">// INT地址
+</span></span></span><span class="line"><span class="cl">	<span class="p">};</span>
+</span></span><span class="line"><span class="cl"><span class="n">DWORD</span> <span class="n">TimeDateStamp</span><span class="p">;</span> <span class="c1">// 时间戳
+</span></span></span><span class="line"><span class="cl"><span class="n">DWORD</span> <span class="n">ForwarderChain</span><span class="p">;</span> <span class="c1">// 转发链
+</span></span></span><span class="line"><span class="cl"><span class="n">DWORD</span> <span class="n">Name</span><span class="p">;</span> <span class="c1">// DLL名称RVA
+</span></span></span><span class="line"><span class="cl"><span class="n">DWORD</span> <span class="n">FirstThunk</span><span class="p">;</span> <span class="c1">// IAT地址
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span> <span class="n">IMAGE_IMPORT_DESCRIPTOR</span><span class="p">;</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><strong>DWORD OriginalFirstThunk</strong> INT导入名称表地址</p>
+<p>表中成员</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span><span class="lnt">9
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">typedef</span> <span class="k">struct</span> <span class="n">_IMAGE_THUNK_DATA32</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">union</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="n">DWORD</span> <span class="n">ForwarderString</span><span class="p">;</span>      <span class="c1">// PBYTE 
+</span></span></span><span class="line"><span class="cl">        <span class="n">DWORD</span> <span class="n">Function</span><span class="p">;</span>             <span class="c1">// PDWORD
+</span></span></span><span class="line"><span class="cl">        <span class="n">DWORD</span> <span class="n">Ordinal</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">DWORD</span> <span class="n">AddressOfData</span><span class="p">;</span>        <span class="c1">//RVA 指向_IMAGE_IMPORT_BY_NAME 
+</span></span></span><span class="line"><span class="cl">    <span class="p">}</span> <span class="n">u1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span> <span class="n">IMAGE_THUNK_DATA32</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">typedef</span> <span class="n">IMAGE_THUNK_DATA32</span> <span class="o">*</span> <span class="n">PIMAGE_THUNK_DATA32</span><span class="p">;</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><img src="/p/pe%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84/INT.png"
+	width="928"
+	height="363"
+	srcset="/p/pe%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84/INT_hu_fa9819a72c0c91cf.png 480w, /p/pe%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84/INT_hu_731f9f6652ead78b.png 1024w"
+	loading="lazy"
+	
+		alt="INT"
+	
+	
+		class="gallery-image" 
+		data-flex-grow="255"
+		data-flex-basis="613px"
+	
+></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">typedef</span> <span class="k">struct</span> <span class="n">_IMAGE_IMPORT_BY_NAME</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">WORD</span>    <span class="n">Hint</span><span class="p">;</span>       <span class="c1">//可能为0，编译器决定，如果不为0，是函数在导出表中的索引
+</span></span></span><span class="line"><span class="cl">    <span class="n">BYTE</span>    <span class="n">Name</span><span class="p">[</span><span class="mi">1</span><span class="p">];</span>    <span class="c1">//函数名称，以0结尾，由于不知道到底多长，所以干脆只给出第一个字符，找到0结束
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span> <span class="n">IMAGE_IMPORT_BY_NAME</span><span class="p">,</span> <span class="o">*</span><span class="n">PIMAGE_IMPORT_BY_NAME</span><span class="p">;</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><strong>DWORD FirstThunk</strong>   IAT导入地址表地址</p>
+<p>加载前是和INT一样，加载后存的是函数地址</p>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>重定位表</strong> 修正因为动调加载导致的地址错误</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">typedef</span> <span class="k">struct</span> <span class="n">_IMAGE_BASE_RELOCATION</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>   
+</span></span><span class="line"><span class="cl">    <span class="n">DWORD</span>   <span class="n">VirtualAddress</span><span class="p">;</span>                      <span class="c1">// 需重定位数据的起始RVA   
+</span></span></span><span class="line"><span class="cl">    <span class="n">DWORD</span>   <span class="n">SizeOfBlock</span><span class="p">;</span>                         <span class="c1">// 本结构与TypeOffset总大小 
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span> <span class="n">IMAGE_BASE_RELOCATION</span><span class="p">;</span> <span class="k">typedef</span>  <span class="n">IMAGE_BASE_RELOCATION</span> <span class="n">UNALIGNED</span> <span class="n">IMAGE_BASE_RELOCATION</span><span class="p">;</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+</ul>
+<p><img src="/p/pe%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84/%E9%87%8D%E5%AE%9A%E4%BD%8D%E8%A1%A8.png"
+	width="448"
+	height="416"
+	srcset="/p/pe%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84/%E9%87%8D%E5%AE%9A%E4%BD%8D%E8%A1%A8_hu_7aca580a698f00cb.png 480w, /p/pe%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84/%E9%87%8D%E5%AE%9A%E4%BD%8D%E8%A1%A8_hu_16e41481070785ef.png 1024w"
+	loading="lazy"
+	
+		alt="重定位表"
+	
+	
+		class="gallery-image" 
+		data-flex-grow="107"
+		data-flex-basis="258px"
+	
+></p>
+<p>​			高4位判断是否需要修改</p>
+
+</section>
+
+
+    <footer class="article-footer">
+    
+
+    </footer>
+
+
+    
+</article>
+
+    
+
+    
+
+     
+    
+        
+    <script src="https://utteranc.es/client.js" 
+        repo="linye9999/linye9999.github.io"
+        issue-term="pathname"
+        
+        crossorigin="anonymous"
+        async
+        >
+</script>
+
+<style>
+    .utterances {
+        max-width: unset;
+    }
+</style>
+
+<script>
+    let utterancesLoaded = false;
+
+    function setUtterancesTheme(theme) {
+        let utterances = document.querySelector('.utterances iframe');
+        if (utterances) {
+            utterances.contentWindow.postMessage(
+                {
+                    type: 'set-theme',
+                    theme: `github-${theme}`
+                },
+                'https://utteranc.es'
+            );
+        }
+    }
+
+    addEventListener('message', event => {
+        if (event.origin !== 'https://utteranc.es') return;
+
+        
+        utterancesLoaded = true;
+        setUtterancesTheme(document.documentElement.dataset.scheme)
+    });
+
+    window.addEventListener('onColorSchemeChange', (e) => {
+        if (!utterancesLoaded) return;
+        setUtterancesTheme(e.detail)
+    })
+</script>
+
+
+    
+
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+        2025 linye
+    </section>
+    
+    <section class="powerby">
+        使用 <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> 构建 <br />
+        主题 <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.32.0">Stack</a></b> 由 <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a> 设计
+    </section>
+</footer>
+
+
+    
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
+                defer
+                >
+            </script><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
+                defer
+                >
+            </script><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
+            ><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
+            >
+
+            </main>
+        </div>
+        <script 
+                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
+                
+                >
+            </script><script type="text/javascript" src="/ts/main.c922af694cc257bf1ecc41c0dd7b0430f9114ec280ccf67cd2c6ad55f5316c4e.js" defer></script>
+<script>
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
+</script>
+
+    </body>
+</html>
