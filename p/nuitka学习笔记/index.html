@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="zh-cn" dir="ltr">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content="什么是nuitka 查看GitHub上的文档可知：Nuitka 是 Python 编译器。对的是编译器，我们平时用来跑python脚本的是解释器。\n要了解编译器和解释器的区别，就先要了解高级语言除了面向过程和面向对象的又一分类，编译型语言和解释型语言。\n编译型语言：如C、C++、Rust、Go。要让这些语言写的程序跑起来，要经过编译器生成可执行文件，我们跑的是可执行文件。\n解释型语言：如Python、JavaScript、Ruby、PHP。要让这些语言写的程序跑起来，就不需要编译，而是通过解释器，解释器去执行一行行的代码。这也就是为什么我们常说c语言代码和python脚本，很少有人说c语言脚本。\n说回正题，既然python是一个解释型语言，那么为什么会有nuitka这种编译器，是有什么小巧思吗？\n为什么要nuitka？ 想象这样一个场景，小b同学用python写一个galagame，想分享给同学小w玩，可是小w没什么计算机基础，啥语言也不会，也没安装python解释器。小w只会双击可执行文件来玩游戏，收到.py文件的时候只会双击，然后就冒出一堆代码，气愤的小w就去找小b说：“你发一堆代码说明意思，我的安装包呢？”这时候的小b该怎么办，要么把解释器也给他发过去（其实就是PyInstaller的原理截取一段GitHub文档上的话“PyInstaller 读取的是你写的 Python 脚本。它会分析你的代码 要发现脚本所需的其他所有模块和库 执行。然后它收集所有这些文件的副本——包括活跃文件 Python 解释器”），要么用c/c++再写一个差不多的程序编译成可执行文件发给他（nuitka的原理）。\n上面就是nuitka的其中一个优势独立性: 生成的可执行文件不再依赖于Python解释器，可以在没有安装Python的环境中运行。当然还有其他的比如：\n性能提升: C++是一种编译型语言，其执行效率远高于解释型语言Python。通过将Python代码编译成C++代码，可以显著提高程序的执行速度。 代码保护: 编译后的代码难以逆向工程，可以提高代码的安全性。 更好的线程支持: C++提供了更底层的线程控制，可以更好地利用多核CPU。 nuitka原理 由于我还没学编译原理，所以只能推荐一篇文章Python打包工具Nuitka的编译机制：将Python代码转换为C++并优化为可执行文件 - 智猿学院-前后端，数据库，人工智能，云计算等领域前沿技术讲座\nnuitka逆向 已经有前辈总结了比较详尽的思路和过程，所以直接推荐一篇文章CrackMe] 我又来了，这次用py的nuitka，我打包工具的另一个分支 思路 - 吾爱破解 - 52pojie.cn这篇文章里面还推荐了几篇文章也挺好的，尤其是Google官方的一道ctf题目的wp挺好玩的https://services.google.com/fh/files/misc/7-flake-flareon10.pdf，另外一篇需要仔细阅读写的比较细https://goatmilkk.notion.site/Nuitka-a3ac9ee7f3f240f3baa345c17f2b8aa3\n">
+<title>Nuitka学习笔记</title>
+
+<link rel='canonical' href='https://linye9999.github.io/p/nuitka%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/'>
+
+<link rel="stylesheet" href="/scss/style.min.b0e76e98cdd4f7082d1fc36f7af7e0843a81201db2197c03ca426751dc923735.css"><meta property='og:title' content="Nuitka学习笔记">
+<meta property='og:description' content="什么是nuitka 查看GitHub上的文档可知：Nuitka 是 Python 编译器。对的是编译器，我们平时用来跑python脚本的是解释器。\n要了解编译器和解释器的区别，就先要了解高级语言除了面向过程和面向对象的又一分类，编译型语言和解释型语言。\n编译型语言：如C、C++、Rust、Go。要让这些语言写的程序跑起来，要经过编译器生成可执行文件，我们跑的是可执行文件。\n解释型语言：如Python、JavaScript、Ruby、PHP。要让这些语言写的程序跑起来，就不需要编译，而是通过解释器，解释器去执行一行行的代码。这也就是为什么我们常说c语言代码和python脚本，很少有人说c语言脚本。\n说回正题，既然python是一个解释型语言，那么为什么会有nuitka这种编译器，是有什么小巧思吗？\n为什么要nuitka？ 想象这样一个场景，小b同学用python写一个galagame，想分享给同学小w玩，可是小w没什么计算机基础，啥语言也不会，也没安装python解释器。小w只会双击可执行文件来玩游戏，收到.py文件的时候只会双击，然后就冒出一堆代码，气愤的小w就去找小b说：“你发一堆代码说明意思，我的安装包呢？”这时候的小b该怎么办，要么把解释器也给他发过去（其实就是PyInstaller的原理截取一段GitHub文档上的话“PyInstaller 读取的是你写的 Python 脚本。它会分析你的代码 要发现脚本所需的其他所有模块和库 执行。然后它收集所有这些文件的副本——包括活跃文件 Python 解释器”），要么用c/c++再写一个差不多的程序编译成可执行文件发给他（nuitka的原理）。\n上面就是nuitka的其中一个优势独立性: 生成的可执行文件不再依赖于Python解释器，可以在没有安装Python的环境中运行。当然还有其他的比如：\n性能提升: C++是一种编译型语言，其执行效率远高于解释型语言Python。通过将Python代码编译成C++代码，可以显著提高程序的执行速度。 代码保护: 编译后的代码难以逆向工程，可以提高代码的安全性。 更好的线程支持: C++提供了更底层的线程控制，可以更好地利用多核CPU。 nuitka原理 由于我还没学编译原理，所以只能推荐一篇文章Python打包工具Nuitka的编译机制：将Python代码转换为C++并优化为可执行文件 - 智猿学院-前后端，数据库，人工智能，云计算等领域前沿技术讲座\nnuitka逆向 已经有前辈总结了比较详尽的思路和过程，所以直接推荐一篇文章CrackMe] 我又来了，这次用py的nuitka，我打包工具的另一个分支 思路 - 吾爱破解 - 52pojie.cn这篇文章里面还推荐了几篇文章也挺好的，尤其是Google官方的一道ctf题目的wp挺好玩的https://services.google.com/fh/files/misc/7-flake-flareon10.pdf，另外一篇需要仔细阅读写的比较细https://goatmilkk.notion.site/Nuitka-a3ac9ee7f3f240f3baa345c17f2b8aa3\n">
+<meta property='og:url' content='https://linye9999.github.io/p/nuitka%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/'>
+<meta property='og:site_name' content='linye'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:published_time' content='2026-02-27T20:52:05&#43;08:00'/><meta property='article:modified_time' content='2026-02-27T20:52:05&#43;08:00'/>
+<meta name="twitter:title" content="Nuitka学习笔记">
+<meta name="twitter:description" content="什么是nuitka 查看GitHub上的文档可知：Nuitka 是 Python 编译器。对的是编译器，我们平时用来跑python脚本的是解释器。\n要了解编译器和解释器的区别，就先要了解高级语言除了面向过程和面向对象的又一分类，编译型语言和解释型语言。\n编译型语言：如C、C++、Rust、Go。要让这些语言写的程序跑起来，要经过编译器生成可执行文件，我们跑的是可执行文件。\n解释型语言：如Python、JavaScript、Ruby、PHP。要让这些语言写的程序跑起来，就不需要编译，而是通过解释器，解释器去执行一行行的代码。这也就是为什么我们常说c语言代码和python脚本，很少有人说c语言脚本。\n说回正题，既然python是一个解释型语言，那么为什么会有nuitka这种编译器，是有什么小巧思吗？\n为什么要nuitka？ 想象这样一个场景，小b同学用python写一个galagame，想分享给同学小w玩，可是小w没什么计算机基础，啥语言也不会，也没安装python解释器。小w只会双击可执行文件来玩游戏，收到.py文件的时候只会双击，然后就冒出一堆代码，气愤的小w就去找小b说：“你发一堆代码说明意思，我的安装包呢？”这时候的小b该怎么办，要么把解释器也给他发过去（其实就是PyInstaller的原理截取一段GitHub文档上的话“PyInstaller 读取的是你写的 Python 脚本。它会分析你的代码 要发现脚本所需的其他所有模块和库 执行。然后它收集所有这些文件的副本——包括活跃文件 Python 解释器”），要么用c/c++再写一个差不多的程序编译成可执行文件发给他（nuitka的原理）。\n上面就是nuitka的其中一个优势独立性: 生成的可执行文件不再依赖于Python解释器，可以在没有安装Python的环境中运行。当然还有其他的比如：\n性能提升: C++是一种编译型语言，其执行效率远高于解释型语言Python。通过将Python代码编译成C++代码，可以显著提高程序的执行速度。 代码保护: 编译后的代码难以逆向工程，可以提高代码的安全性。 更好的线程支持: C++提供了更底层的线程控制，可以更好地利用多核CPU。 nuitka原理 由于我还没学编译原理，所以只能推荐一篇文章Python打包工具Nuitka的编译机制：将Python代码转换为C++并优化为可执行文件 - 智猿学院-前后端，数据库，人工智能，云计算等领域前沿技术讲座\nnuitka逆向 已经有前辈总结了比较详尽的思路和过程，所以直接推荐一篇文章CrackMe] 我又来了，这次用py的nuitka，我打包工具的另一个分支 思路 - 吾爱破解 - 52pojie.cn这篇文章里面还推荐了几篇文章也挺好的，尤其是Google官方的一道ctf题目的wp挺好玩的https://services.google.com/fh/files/misc/7-flake-flareon10.pdf，另外一篇需要仔细阅读写的比较细https://goatmilkk.notion.site/Nuitka-a3ac9ee7f3f240f3baa345c17f2b8aa3\n">
+    <link rel="shortcut icon" href="/favicon.ico" />
+
+    </head>
+    <body class="
+    article-page
+    ">
+    <script>
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
+
+            document.documentElement.dataset.scheme = 'dark';
+        } else {
+            document.documentElement.dataset.scheme = 'light';
+        }
+    })();
+</script>
+<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="切换菜单">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
+
+    <header>
+        
+            
+            <figure class="site-avatar">
+                <a href="/">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/avatar_hu_60d626e16fed2aa2.png" width="300"
+                            height="300" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+                </a>
+                
+                    <span class="emoji">🍥</span>
+                
+            </figure>
+            
+        
+        
+        <div class="site-meta">
+            <h1 class="site-name"><a href="/">linye</a></h1>
+            <h2 class="site-description">欢迎来到我的博客这里啥都没有，还有linye是绫夜</h2>
+        </div>
+    </header><ol class="menu-social">
+            
+                <li>
+                    <a 
+                        href='https://github.com/CaiJimmy/hugo-theme-stack'
+                        target="_blank"
+                        title="GitHub"
+                        rel="me"
+                    >
+                        
+                        
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-github" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+  <path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5" />
+</svg>
+
+
+
+                        
+                    </a>
+                </li>
+            
+                <li>
+                    <a 
+                        href='https://twitter.com'
+                        target="_blank"
+                        title="Twitter"
+                        rel="me"
+                    >
+                        
+                        
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-twitter" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+  <path d="M22 4.01c-1 .49 -1.98 .689 -3 .99c-1.121 -1.265 -2.783 -1.335 -4.38 -.737s-2.643 2.06 -2.62 3.737v1c-3.245 .083 -6.135 -1.395 -8 -4c0 0 -4.182 7.433 4 11c-1.872 1.247 -3.739 2.088 -6 2c3.308 1.803 6.913 2.423 10.034 1.517c3.58 -1.04 6.522 -3.723 7.651 -7.742a13.84 13.84 0 0 0 .497 -3.753c-.002 -.249 1.51 -2.772 1.818 -4.013z" />
+</svg>
+
+
+
+                        
+                    </a>
+                </li>
+            
+        </ol><ol class="menu" id="main-menu">
+        
+        
+        
+        <li >
+            <a href='/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-home" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <polyline points="5 12 3 12 12 3 21 12 19 12" />
+  <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
+  <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
+</svg>
+
+
+
+                
+                <span>主页</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/%E5%85%B3%E4%BA%8E/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="7" r="4" />
+  <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+</svg>
+
+
+
+                
+                <span>关于</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/archives/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-archive" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <rect x="3" y="4" width="18" height="4" rx="2" />
+  <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" />
+  <line x1="10" y1="12" x2="14" y2="12" />
+</svg>
+
+
+
+                
+                <span>归档</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/search/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-search" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="10" cy="10" r="7" />
+  <line x1="21" y1="21" x2="15" y2="15" />
+</svg>
+
+
+
+                
+                <span>搜索</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/%E5%8F%8B%E6%83%85%E9%93%BE%E6%8E%A5/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-link" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M10 14a3.5 3.5 0 0 0 5 0l4 -4a3.5 3.5 0 0 0 -5 -5l-.5 .5" />
+  <path d="M14 10a3.5 3.5 0 0 0 -5 0l-4 4a3.5 3.5 0 0 0 5 5l.5 -.5" />
+</svg>
+
+
+
+                
+                <span>友情链接</span>
+            </a>
+        </li>
+        
+        <li class="menu-bottom-section">
+            <ol class="menu">
+                    
+                        <li id="i18n-switch">  
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-language" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+  <path d="M4 5h7" />
+  <path d="M9 3v2c0 4.418 -2.239 8 -5 8" />
+  <path d="M5 9c-.003 2.144 2.952 3.908 6.7 4" />
+  <path d="M12 20l4 -9l4 9" />
+  <path d="M19.1 18h-6.2" />
+</svg>
+
+
+
+                            <select name="language" title="language" onchange="window.location.href = this.selectedOptions[0].value">
+                                
+                                    <option value="https://linye9999.github.io/en/" >English</option>
+                                
+                                    <option value="https://linye9999.github.io/" selected>简体中文</option>
+                                
+                                    <option value="https://linye9999.github.io/ar/" >عربي</option>
+                                
+                            </select>
+                        </li>
+                    
+                
+
+                
+                    <li id="dark-mode-toggle">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                        <span>暗色模式</span>
+                    </li>
+                
+            </ol>
+        </li>
+    </ol>
+</aside>
+
+    
+
+            <main class="main full-width">
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+
+    <div class="article-title-wrapper">
+        <h2 class="article-title">
+            <a href="/p/nuitka%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">Nuitka学习笔记</a>
+        </h2>
+    
+        
+    </div>
+
+    
+    
+    
+    
+    <footer class="article-time">
+        
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
+  <circle cx="18" cy="18" r="4" />
+  <path d="M15 3v4" />
+  <path d="M7 3v4" />
+  <path d="M3 11h16" />
+  <path d="M18 16.496v1.504l1 1" />
+</svg>
+                <time class="article-time--published" datetime='2026-02-27T20:52:05&#43;08:00'>Feb 27, 2026</time>
+            </div>
+        
+
+        
+    </footer>
+    
+
+    
+</div>
+
+</header>
+
+    <section class="article-content">
+    
+    
+    <h1 id="什么是nuitka">什么是nuitka
+</h1><p>查看GitHub上的文档可知：Nuitka 是 Python <strong>编译器</strong>。对的是<strong>编译器</strong>，我们平时用来跑python脚本的是<strong>解释器</strong>。</p>
+<p>要了解<strong>编译器</strong>和<strong>解释器</strong>的区别，就先要了解高级语言除了面向过程和面向对象的又一分类，编译型语言和解释型语言。</p>
+<p><strong>编译型语言</strong>：如C、C++、Rust、Go。要让这些语言写的程序跑起来，要经过编译器生成可执行文件，我们跑的是可执行文件。</p>
+<p><strong>解释型语言</strong>：如Python、JavaScript、Ruby、PHP。要让这些语言写的程序跑起来，就不需要编译，而是通过解释器，解释器去执行一行行的代码。这也就是为什么我们常说c语言代码和python脚本，很少有人说c语言脚本。</p>
+<p>说回正题，既然python是一个解释型语言，那么为什么会有nuitka这种编译器，是有什么小巧思吗？</p>
+<h1 id="为什么要nuitka">为什么要nuitka？
+</h1><p>想象这样一个场景，小b同学用python写一个galagame，想分享给同学小w玩，可是小w没什么计算机基础，啥语言也不会，也没安装python解释器。小w只会双击可执行文件来玩游戏，收到.py文件的时候只会双击，然后就冒出一堆代码，气愤的小w就去找小b说：“你发一堆代码说明意思，我的安装包呢？”这时候的小b该怎么办，要么把解释器也给他发过去（其实就是<strong>PyInstaller</strong>的原理截取一段GitHub文档上的话“PyInstaller 读取的是你写的 Python 脚本。它会分析你的代码 要发现脚本所需的其他所有模块和库 执行。然后它收集所有这些文件的副本——包括活跃文件 Python 解释器”），要么用c/c++再写一个差不多的程序编译成可执行文件发给他（<strong>nuitka</strong>的原理）。</p>
+<p>上面就是nuitka的其中一个优势<strong>独立性:</strong> 生成的可执行文件不再依赖于Python解释器，可以在没有安装Python的环境中运行。当然还有其他的比如：</p>
+<ul>
+<li><strong>性能提升:</strong> C++是一种编译型语言，其执行效率远高于解释型语言Python。通过将Python代码编译成C++代码，可以显著提高程序的执行速度。</li>
+<li><strong>代码保护:</strong> 编译后的代码难以逆向工程，可以提高代码的安全性。</li>
+<li><strong>更好的线程支持:</strong> C++提供了更底层的线程控制，可以更好地利用多核CPU。</li>
+</ul>
+<h1 id="nuitka原理">nuitka原理
+</h1><p>由于我还没学编译原理，所以只能推荐一篇文章<a class="link" href="https://www.zyxy.net/archives/25490"  target="_blank" rel="noopener"
+    >Python打包工具Nuitka的编译机制：将Python代码转换为C++并优化为可执行文件 - 智猿学院-前后端，数据库，人工智能，云计算等领域前沿技术讲座</a></p>
+<h1 id="nuitka逆向">nuitka逆向
+</h1><p>已经有前辈总结了比较详尽的思路和过程，所以直接推荐一篇文章<a class="link" href="https://www.52pojie.cn/thread-2063208-1-1.html"  target="_blank" rel="noopener"
+    >CrackMe] 我又来了，这次用py的nuitka，我打包工具的另一个分支 思路 - 吾爱破解 - 52pojie.cn</a>这篇文章里面还推荐了几篇文章也挺好的，尤其是Google官方的一道ctf题目的wp挺好玩的https://services.google.com/fh/files/misc/7-flake-flareon10.pdf，另外一篇需要仔细阅读写的比较细https://goatmilkk.notion.site/Nuitka-a3ac9ee7f3f240f3baa345c17f2b8aa3</p>
+
+</section>
+
+
+    <footer class="article-footer">
+    
+
+    </footer>
+
+
+    
+</article>
+
+    
+
+    
+
+     
+    
+        
+    <script src="https://utteranc.es/client.js" 
+        repo="linye9999/linye9999.github.io"
+        issue-term="pathname"
+        
+        crossorigin="anonymous"
+        async
+        >
+</script>
+
+<style>
+    .utterances {
+        max-width: unset;
+    }
+</style>
+
+<script>
+    let utterancesLoaded = false;
+
+    function setUtterancesTheme(theme) {
+        let utterances = document.querySelector('.utterances iframe');
+        if (utterances) {
+            utterances.contentWindow.postMessage(
+                {
+                    type: 'set-theme',
+                    theme: `github-${theme}`
+                },
+                'https://utteranc.es'
+            );
+        }
+    }
+
+    addEventListener('message', event => {
+        if (event.origin !== 'https://utteranc.es') return;
+
+        
+        utterancesLoaded = true;
+        setUtterancesTheme(document.documentElement.dataset.scheme)
+    });
+
+    window.addEventListener('onColorSchemeChange', (e) => {
+        if (!utterancesLoaded) return;
+        setUtterancesTheme(e.detail)
+    })
+</script>
+
+
+    
+
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+            2025 - 
+        
+        2026 linye
+    </section>
+    
+    <section class="powerby">
+        使用 <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> 构建 <br />
+        主题 <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.32.0">Stack</a></b> 由 <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a> 设计
+    </section>
+</footer>
+
+
+    
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
+                defer
+                >
+            </script><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
+                defer
+                >
+            </script><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
+            ><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
+            >
+
+            </main>
+        </div>
+        <script 
+                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
+                
+                >
+            </script><script type="text/javascript" src="/ts/main.c922af694cc257bf1ecc41c0dd7b0430f9114ec280ccf67cd2c6ad55f5316c4e.js" defer></script>
+<script>
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
+</script>
+
+    </body>
+</html>

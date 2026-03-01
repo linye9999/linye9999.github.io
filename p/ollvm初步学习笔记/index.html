@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="zh-cn" dir="ltr">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content="ollvm 什么事ollvm是基于LLVM（Low Level Virtual Machine）的一个开源混淆器，包含三大核心混淆手段指令替换、虚假控制流、控制流平坦化 指令替换 原理：是一种通过数学等价变换来增加代码复杂度的混淆技术。它的核心思想是将程序中原本简单的指令（如加法、异或），替换为一段功能等效但逻辑极其晦涩的指令序列\n手段：采用了**MBA(Mixed Boolean-Arithmetic，混合布尔算术)**表达式,就是将基本运算用位运算代替让代码变得很丑\n对抗：\nD-810直接去 D-810做不出来的用GAMBA再等价替换 实例：极客大挑战week4的obfuscat3_revenge\n控制流平坦化 FLA 原理：个人理解就是将原本函数的传递关系全部打碎，再统一组织。原来的跳转是一个函数跳到另一个函数，而现在是统一跳回分发器函数，再由状态变量决定跳入哪个函数，函数或者真实块的下一步调用取决的是状态变得的值。\n核心组件：理解了上面的原来下面的组件就都清楚了\n序言 (Prologue) ： 函数的入口。它的核心任务是初始化\u200b状态变量 (State Variable) \u200b，例如 state = START_KEY。 主分发器 (Main Dispatcher) ： 混淆的心脏。通常是一个巨大的 while(true)\u200b 循环，内部包裹着 switch(state)。它不断读取当前状态值，决定下一个要执行哪个块。 子分发器 (Sub-Dispatcher) (变种) ： 更复杂的 FLA 会嵌套多层 switch，或者使用数学公式计算跳转目标，进一步隐藏状态转移关系。 真实块 (Relevant Blocks) ： 包含原始业务逻辑的代码块。它们不再直接跳转到下一个真实块，而是被“隔离”成了 switch 的一个个 case。 预处理块 (Predispatcher) / 状态更新： 每个真实块执行完后，不会直接跳转。而是通过更新 state\u200b 变量（例如 state = NEXT_KEY），然后无条件跳转回主分发器，由分发器在下一轮循环中根据新状态进行调度。 返回块 (Return) ： 函数的出口，当状态变量达到特定值时，跳出循环并返回。 ps：该部分引用:[原创]深入浅出 Ollvm 混淆原理及反混淆技术-Android安全-看雪安全社区｜专业技术交流与安全研究论坛 对抗\n">
+<title>Ollvm初步学习笔记</title>
+
+<link rel='canonical' href='https://linye9999.github.io/p/ollvm%E5%88%9D%E6%AD%A5%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/'>
+
+<link rel="stylesheet" href="/scss/style.min.b0e76e98cdd4f7082d1fc36f7af7e0843a81201db2197c03ca426751dc923735.css"><meta property='og:title' content="Ollvm初步学习笔记">
+<meta property='og:description' content="ollvm 什么事ollvm是基于LLVM（Low Level Virtual Machine）的一个开源混淆器，包含三大核心混淆手段指令替换、虚假控制流、控制流平坦化 指令替换 原理：是一种通过数学等价变换来增加代码复杂度的混淆技术。它的核心思想是将程序中原本简单的指令（如加法、异或），替换为一段功能等效但逻辑极其晦涩的指令序列\n手段：采用了**MBA(Mixed Boolean-Arithmetic，混合布尔算术)**表达式,就是将基本运算用位运算代替让代码变得很丑\n对抗：\nD-810直接去 D-810做不出来的用GAMBA再等价替换 实例：极客大挑战week4的obfuscat3_revenge\n控制流平坦化 FLA 原理：个人理解就是将原本函数的传递关系全部打碎，再统一组织。原来的跳转是一个函数跳到另一个函数，而现在是统一跳回分发器函数，再由状态变量决定跳入哪个函数，函数或者真实块的下一步调用取决的是状态变得的值。\n核心组件：理解了上面的原来下面的组件就都清楚了\n序言 (Prologue) ： 函数的入口。它的核心任务是初始化\u200b状态变量 (State Variable) \u200b，例如 state = START_KEY。 主分发器 (Main Dispatcher) ： 混淆的心脏。通常是一个巨大的 while(true)\u200b 循环，内部包裹着 switch(state)。它不断读取当前状态值，决定下一个要执行哪个块。 子分发器 (Sub-Dispatcher) (变种) ： 更复杂的 FLA 会嵌套多层 switch，或者使用数学公式计算跳转目标，进一步隐藏状态转移关系。 真实块 (Relevant Blocks) ： 包含原始业务逻辑的代码块。它们不再直接跳转到下一个真实块，而是被“隔离”成了 switch 的一个个 case。 预处理块 (Predispatcher) / 状态更新： 每个真实块执行完后，不会直接跳转。而是通过更新 state\u200b 变量（例如 state = NEXT_KEY），然后无条件跳转回主分发器，由分发器在下一轮循环中根据新状态进行调度。 返回块 (Return) ： 函数的出口，当状态变量达到特定值时，跳出循环并返回。 ps：该部分引用:[原创]深入浅出 Ollvm 混淆原理及反混淆技术-Android安全-看雪安全社区｜专业技术交流与安全研究论坛 对抗\n">
+<meta property='og:url' content='https://linye9999.github.io/p/ollvm%E5%88%9D%E6%AD%A5%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/'>
+<meta property='og:site_name' content='linye'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:published_time' content='2025-12-30T16:04:27&#43;08:00'/><meta property='article:modified_time' content='2025-12-30T16:04:27&#43;08:00'/>
+<meta name="twitter:title" content="Ollvm初步学习笔记">
+<meta name="twitter:description" content="ollvm 什么事ollvm是基于LLVM（Low Level Virtual Machine）的一个开源混淆器，包含三大核心混淆手段指令替换、虚假控制流、控制流平坦化 指令替换 原理：是一种通过数学等价变换来增加代码复杂度的混淆技术。它的核心思想是将程序中原本简单的指令（如加法、异或），替换为一段功能等效但逻辑极其晦涩的指令序列\n手段：采用了**MBA(Mixed Boolean-Arithmetic，混合布尔算术)**表达式,就是将基本运算用位运算代替让代码变得很丑\n对抗：\nD-810直接去 D-810做不出来的用GAMBA再等价替换 实例：极客大挑战week4的obfuscat3_revenge\n控制流平坦化 FLA 原理：个人理解就是将原本函数的传递关系全部打碎，再统一组织。原来的跳转是一个函数跳到另一个函数，而现在是统一跳回分发器函数，再由状态变量决定跳入哪个函数，函数或者真实块的下一步调用取决的是状态变得的值。\n核心组件：理解了上面的原来下面的组件就都清楚了\n序言 (Prologue) ： 函数的入口。它的核心任务是初始化\u200b状态变量 (State Variable) \u200b，例如 state = START_KEY。 主分发器 (Main Dispatcher) ： 混淆的心脏。通常是一个巨大的 while(true)\u200b 循环，内部包裹着 switch(state)。它不断读取当前状态值，决定下一个要执行哪个块。 子分发器 (Sub-Dispatcher) (变种) ： 更复杂的 FLA 会嵌套多层 switch，或者使用数学公式计算跳转目标，进一步隐藏状态转移关系。 真实块 (Relevant Blocks) ： 包含原始业务逻辑的代码块。它们不再直接跳转到下一个真实块，而是被“隔离”成了 switch 的一个个 case。 预处理块 (Predispatcher) / 状态更新： 每个真实块执行完后，不会直接跳转。而是通过更新 state\u200b 变量（例如 state = NEXT_KEY），然后无条件跳转回主分发器，由分发器在下一轮循环中根据新状态进行调度。 返回块 (Return) ： 函数的出口，当状态变量达到特定值时，跳出循环并返回。 ps：该部分引用:[原创]深入浅出 Ollvm 混淆原理及反混淆技术-Android安全-看雪安全社区｜专业技术交流与安全研究论坛 对抗\n">
+    <link rel="shortcut icon" href="/favicon.ico" />
+
+    </head>
+    <body class="
+    article-page
+    ">
+    <script>
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
+
+            document.documentElement.dataset.scheme = 'dark';
+        } else {
+            document.documentElement.dataset.scheme = 'light';
+        }
+    })();
+</script>
+<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="切换菜单">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
+
+    <header>
+        
+            
+            <figure class="site-avatar">
+                <a href="/">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/avatar_hu_60d626e16fed2aa2.png" width="300"
+                            height="300" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+                </a>
+                
+                    <span class="emoji">🍥</span>
+                
+            </figure>
+            
+        
+        
+        <div class="site-meta">
+            <h1 class="site-name"><a href="/">linye</a></h1>
+            <h2 class="site-description">欢迎来到我的博客这里啥都没有，还有linye是绫夜</h2>
+        </div>
+    </header><ol class="menu-social">
+            
+                <li>
+                    <a 
+                        href='https://github.com/CaiJimmy/hugo-theme-stack'
+                        target="_blank"
+                        title="GitHub"
+                        rel="me"
+                    >
+                        
+                        
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-github" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+  <path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5" />
+</svg>
+
+
+
+                        
+                    </a>
+                </li>
+            
+                <li>
+                    <a 
+                        href='https://twitter.com'
+                        target="_blank"
+                        title="Twitter"
+                        rel="me"
+                    >
+                        
+                        
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-twitter" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+  <path d="M22 4.01c-1 .49 -1.98 .689 -3 .99c-1.121 -1.265 -2.783 -1.335 -4.38 -.737s-2.643 2.06 -2.62 3.737v1c-3.245 .083 -6.135 -1.395 -8 -4c0 0 -4.182 7.433 4 11c-1.872 1.247 -3.739 2.088 -6 2c3.308 1.803 6.913 2.423 10.034 1.517c3.58 -1.04 6.522 -3.723 7.651 -7.742a13.84 13.84 0 0 0 .497 -3.753c-.002 -.249 1.51 -2.772 1.818 -4.013z" />
+</svg>
+
+
+
+                        
+                    </a>
+                </li>
+            
+        </ol><ol class="menu" id="main-menu">
+        
+        
+        
+        <li >
+            <a href='/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-home" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <polyline points="5 12 3 12 12 3 21 12 19 12" />
+  <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
+  <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
+</svg>
+
+
+
+                
+                <span>主页</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/%E5%85%B3%E4%BA%8E/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="7" r="4" />
+  <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+</svg>
+
+
+
+                
+                <span>关于</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/archives/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-archive" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <rect x="3" y="4" width="18" height="4" rx="2" />
+  <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" />
+  <line x1="10" y1="12" x2="14" y2="12" />
+</svg>
+
+
+
+                
+                <span>归档</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/search/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-search" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="10" cy="10" r="7" />
+  <line x1="21" y1="21" x2="15" y2="15" />
+</svg>
+
+
+
+                
+                <span>搜索</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/%E5%8F%8B%E6%83%85%E9%93%BE%E6%8E%A5/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-link" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M10 14a3.5 3.5 0 0 0 5 0l4 -4a3.5 3.5 0 0 0 -5 -5l-.5 .5" />
+  <path d="M14 10a3.5 3.5 0 0 0 -5 0l-4 4a3.5 3.5 0 0 0 5 5l.5 -.5" />
+</svg>
+
+
+
+                
+                <span>友情链接</span>
+            </a>
+        </li>
+        
+        <li class="menu-bottom-section">
+            <ol class="menu">
+                    
+                        <li id="i18n-switch">  
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-language" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+  <path d="M4 5h7" />
+  <path d="M9 3v2c0 4.418 -2.239 8 -5 8" />
+  <path d="M5 9c-.003 2.144 2.952 3.908 6.7 4" />
+  <path d="M12 20l4 -9l4 9" />
+  <path d="M19.1 18h-6.2" />
+</svg>
+
+
+
+                            <select name="language" title="language" onchange="window.location.href = this.selectedOptions[0].value">
+                                
+                                    <option value="https://linye9999.github.io/en/" >English</option>
+                                
+                                    <option value="https://linye9999.github.io/" selected>简体中文</option>
+                                
+                                    <option value="https://linye9999.github.io/ar/" >عربي</option>
+                                
+                            </select>
+                        </li>
+                    
+                
+
+                
+                    <li id="dark-mode-toggle">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                        <span>暗色模式</span>
+                    </li>
+                
+            </ol>
+        </li>
+    </ol>
+</aside>
+
+    <aside class="sidebar right-sidebar sticky">
+        
+            
+                
+    <section class="widget archives">
+        <div class="widget-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-hash" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <line x1="5" y1="9" x2="19" y2="9" />
+  <line x1="5" y1="15" x2="19" y2="15" />
+  <line x1="11" y1="4" x2="7" y2="20" />
+  <line x1="17" y1="4" x2="13" y2="20" />
+</svg>
+
+
+
+        </div>
+        <h2 class="widget-title section-title">目录</h2>
+        
+        <div class="widget--toc">
+            <nav id="TableOfContents">
+  <ol>
+    <li><a href="#指令替换">指令替换</a></li>
+    <li><a href="#控制流平坦化-fla">控制流平坦化 FLA</a></li>
+    <li><a href="#虚假控制流"><strong>虚假控制流</strong></a></li>
+    <li><a href="#字符串加密">字符串加密</a></li>
+  </ol>
+</nav>
+        </div>
+    </section>
+
+            
+        
+    </aside>
+
+
+            <main class="main full-width">
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+
+    <div class="article-title-wrapper">
+        <h2 class="article-title">
+            <a href="/p/ollvm%E5%88%9D%E6%AD%A5%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">Ollvm初步学习笔记</a>
+        </h2>
+    
+        
+    </div>
+
+    
+    
+    
+    
+    <footer class="article-time">
+        
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
+  <circle cx="18" cy="18" r="4" />
+  <path d="M15 3v4" />
+  <path d="M7 3v4" />
+  <path d="M3 11h16" />
+  <path d="M18 16.496v1.504l1 1" />
+</svg>
+                <time class="article-time--published" datetime='2025-12-30T16:04:27&#43;08:00'>Dec 30, 2025</time>
+            </div>
+        
+
+        
+    </footer>
+    
+
+    
+</div>
+
+</header>
+
+    <section class="article-content">
+    
+    
+    <h1 id="ollvm">ollvm
+</h1><ul>
+<li>什么事ollvm是<strong>基于LLVM（Low Level Virtual Machine）的一个开源混淆器</strong>，包含三大核心混淆手段<strong>指令替换、虚假控制流、控制流平坦化</strong></li>
+</ul>
+<h2 id="指令替换">指令替换
+</h2><ul>
+<li>
+<p><strong>原理</strong>：是一种通过数学等价变换来增加代码复杂度的混淆技术。它的核心思想是将程序中原本简单的指令（如加法、异或），替换为一段功能等效但逻辑极其晦涩的指令序列</p>
+</li>
+<li>
+<p><strong>手段</strong>：采用了**MBA(Mixed Boolean-Arithmetic，混合布尔算术)**表达式,就是将基本运算用位运算代替让代码变得很丑</p>
+</li>
+<li>
+<p><strong>对抗</strong>：</p>
+<ul>
+<li>D-810直接去</li>
+<li>D-810做不出来的用GAMBA再等价替换</li>
+</ul>
+</li>
+<li>
+<p><strong>实例</strong>：极客大挑战week4的obfuscat3_revenge</p>
+</li>
+</ul>
+<h2 id="控制流平坦化-fla">控制流平坦化 FLA
+</h2><ul>
+<li>
+<p><strong>原理</strong>：个人理解就是将原本函数的传递关系全部打碎，再统一组织。原来的跳转是一个函数跳到另一个函数，而现在是统一跳回分发器函数，再由状态变量决定跳入哪个函数，函数或者真实块的下一步调用取决的是状态变得的值。</p>
+</li>
+<li>
+<p><strong>核心组件</strong>：理解了上面的原来下面的组件就都清楚了</p>
+<ol>
+<li><strong>序言 (Prologue)</strong> ：
+函数的入口。它的核心任务是初始化​<strong>状态变量 (State Variable)</strong> ​，例如 <code>state = START_KEY</code>。</li>
+<li><strong>主分发器 (Main Dispatcher)</strong> ：
+混淆的心脏。通常是一个巨大的 <code>while(true)</code>​ 循环，内部包裹着 <code>switch(state)</code>。它不断读取当前状态值，决定下一个要执行哪个块。</li>
+<li><strong>子分发器 (Sub-Dispatcher) (变种)</strong> ：
+更复杂的 FLA 会嵌套多层 switch，或者使用数学公式计算跳转目标，进一步隐藏状态转移关系。</li>
+<li><strong>真实块 (Relevant Blocks)</strong> ：
+包含原始业务逻辑的代码块。它们不再直接跳转到下一个真实块，而是被“隔离”成了 switch 的一个个 case。</li>
+<li><strong>预处理块 (Predispatcher) / 状态更新</strong>：
+每个真实块执行完后，不会直接跳转。而是通过更新 <code>state</code>​ 变量（例如 <code>state = NEXT_KEY</code>），然后无条件跳转回主分发器，由分发器在下一轮循环中根据新状态进行调度。</li>
+<li><strong>返回块 (Return)</strong> ：
+函数的出口，当状态变量达到特定值时，跳出循环并返回。</li>
+</ol>
+<ul>
+<li>ps：该部分引用:[<a class="link" href="https://bbs.kanxue.com/thread-289508.htm"  target="_blank" rel="noopener"
+    >原创]深入浅出 Ollvm 混淆原理及反混淆技术-Android安全-看雪安全社区｜专业技术交流与安全研究论坛</a></li>
+</ul>
+</li>
+<li>
+<p><strong>对抗</strong></p>
+<ul>
+<li>直接静态看，之前院ctf的一道题当时不知道这个就直接看逻辑，也是能复原出来的，但是很费时间和脑子。不理解可以直接按照伪代码模拟一遍，搞完就清楚控制流平坦化了</li>
+<li>D-810直接去</li>
+</ul>
+</li>
+<li>
+<p><strong>实例</strong>：院cft：easyre，标准控制流平坦化D-810直接秒</p>
+</li>
+</ul>
+<h2 id="虚假控制流"><strong>虚假控制流</strong>
+</h2><ul>
+<li>
+<p><strong>原理</strong> 是 OLLVM 通过向代码中注入永远不会执行的“死代码”块和难以预测的条件跳转，来干扰控制流图（CFG）分析的一种混淆技术。</p>
+<ol>
+<li><strong>不透明谓词 (Opaque Predicate)</strong> ：
+<ul>
+<li>这是一个在编译时或运行时其值已知，但对于静态分析工具（如 IDA）而言看似未知的条件表达式。</li>
+<li><strong>示例</strong>：<code>if (x * (x + 1) % 2 != 0) { ... }</code>。数学上任意整数 <strong>x</strong>，其 <strong>x(x+1)</strong> 必然是偶数，因此条件永远为假。但 IDA 在不进行深度代数分析的情况下，会认为这是一条合法的分支。</li>
+</ul>
+</li>
+<li><strong>不可达块 (Unreachable Block)</strong> ：
+<ul>
+<li>由永假的不透明谓词保护的代码块。由于条件永远不满足，这些代码在实际运行时永远不会执行，但在静态反编译时会生成大量干扰逻辑，极大地增加了分析工作量。</li>
+</ul>
+</li>
+</ol>
+</li>
+<li>
+<p><strong>对抗</strong>：</p>
+<ul>
+<li>D-810</li>
+<li>全局变量修改段属性与初始值
+<ul>
+<li>定位变量</li>
+<li>修改段属性：Alt+s打开段编辑窗口，选择”Read-only“或者去掉”Write“</li>
+<li>赋予这些变量初值</li>
+<li>在相关段按D，在F5</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="字符串加密">字符串加密
+</h2><p>没践过，就直接引用大佬的文章:[<a class="link" href="https://bbs.kanxue.com/thread-289508.htm"  target="_blank" rel="noopener"
+    >原创]深入浅出 Ollvm 混淆原理及反混淆技术-Android安全-看雪安全社区｜专业技术交流与安全研究论坛</a></p>
+<p><strong>（1）特征搜索</strong></p>
+<p>一般在so中可以直接搜索<code>datadiv_decode</code>，一般很多编写解密函数进行操作是这个函数，针对这种情况，一般可以通过frida hook就可以拿到解密后的值，然后进行patch</p>
+<p><strong>（2）init_array中解密</strong></p>
+<p>字符串解密操作在init_arrray中进行，一般可以通过模拟执行init_array，然后将解密后的字符串全部保存下来</p>
+<p><strong>（3）jni_onload解密</strong></p>
+<p>在jni_onload函数中进行解密操作，这时候就要进行inlinehook拿到解密后寄存器的值，也可以进行hook，也可以使用unicorn进行操作</p>
+<h1 id="后记">后记
+</h1><p>感觉还是要通过题目来理解，指令替换和控制流平坦化通过几个小例题理解更深刻了，字符串加密和虚假控制流感觉就一般</p>
+
+</section>
+
+
+    <footer class="article-footer">
+    
+
+    </footer>
+
+
+    
+</article>
+
+    
+
+    
+
+     
+    
+        
+    <script src="https://utteranc.es/client.js" 
+        repo="linye9999/linye9999.github.io"
+        issue-term="pathname"
+        
+        crossorigin="anonymous"
+        async
+        >
+</script>
+
+<style>
+    .utterances {
+        max-width: unset;
+    }
+</style>
+
+<script>
+    let utterancesLoaded = false;
+
+    function setUtterancesTheme(theme) {
+        let utterances = document.querySelector('.utterances iframe');
+        if (utterances) {
+            utterances.contentWindow.postMessage(
+                {
+                    type: 'set-theme',
+                    theme: `github-${theme}`
+                },
+                'https://utteranc.es'
+            );
+        }
+    }
+
+    addEventListener('message', event => {
+        if (event.origin !== 'https://utteranc.es') return;
+
+        
+        utterancesLoaded = true;
+        setUtterancesTheme(document.documentElement.dataset.scheme)
+    });
+
+    window.addEventListener('onColorSchemeChange', (e) => {
+        if (!utterancesLoaded) return;
+        setUtterancesTheme(e.detail)
+    })
+</script>
+
+
+    
+
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+            2025 - 
+        
+        2026 linye
+    </section>
+    
+    <section class="powerby">
+        使用 <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> 构建 <br />
+        主题 <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.32.0">Stack</a></b> 由 <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a> 设计
+    </section>
+</footer>
+
+
+    
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
+                defer
+                >
+            </script><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
+                defer
+                >
+            </script><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
+            ><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
+            >
+
+            </main>
+        </div>
+        <script 
+                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
+                
+                >
+            </script><script type="text/javascript" src="/ts/main.c922af694cc257bf1ecc41c0dd7b0430f9114ec280ccf67cd2c6ad55f5316c4e.js" defer></script>
+<script>
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
+</script>
+
+    </body>
+</html>
